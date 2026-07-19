@@ -647,6 +647,30 @@ body>nav{display:block}
 }
 .result-overlay.open .result-card{display:block!important;position:relative!important;z-index:2!important}
 
+/* v5.3.6: result summary is rendered as a normal page section, not a fixed modal.
+   This avoids iOS/PWA transparent backdrops intercepting all taps. */
+.result-overlay.page-result{
+  position:relative!important;
+  inset:auto!important;
+  z-index:auto!important;
+  width:min(980px,calc(100% - 24px))!important;
+  margin:18px auto 40px!important;
+  padding:0!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  display:block!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+}
+.result-overlay.page-result .result-card{
+  display:block!important;
+  width:100%!important;
+  max-height:none!important;
+  overflow:visible!important;
+  box-shadow:0 18px 50px rgba(15,23,42,.18);
+}
+
 </style>
 </head>
 <body>
@@ -1037,7 +1061,7 @@ function buildRecordsGame(record){
   const selfSide=state.selfSide;if(selfSide==='none')return null;
   const opponentSide=selfSide==='white'?'yellow':'white',self=record[selfSide],opponent=record[opponentSide];
   const selfParticipant=participantForRecords(selfSide,'self',record),opponentParticipant=participantForRecords(opponentSide,'opponent',record);
-  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.5',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
+  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.6',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
 }
 function syncToRecords(record){const game=buildRecordsGame(record);if(!game)return{synced:false,message:'未指定我方，因此只保存 Scoreboard 紀錄。'};let games=[];try{games=JSON.parse(localStorage.getItem(RECORDS_KEY)||'[]')}catch{}if(!Array.isArray(games))games=[];if(games.some(item=>item?.externalMatchId===game.externalMatchId||item?.id===game.externalMatchId))return{synced:false,message:'此比賽已存在於 Training Records，未重複同步。'};games.push(game);localStorage.setItem(RECORDS_KEY,JSON.stringify(games));return{synced:true,message:'已直接存入 Records。'};}
 function finalizeActiveRun(){if(!state||state.finalized)return;const p=state[state.active];if(p.run>0)commitRun(state.active);state.finalized=true;}
@@ -1050,16 +1074,20 @@ function queueFinishGame(){
 }
 
 function openResultOverlay(){
-  resultOverlay.classList.remove('hidden','visible');
-  resultOverlay.classList.add('open');
+  // Render the summary as a normal document section rather than a fixed modal.
+  // iOS PWA can leave a fixed transparent backdrop above the page after a tap.
+  scoreboard.classList.add('hidden');
+  resultOverlay.classList.remove('hidden','open','visible');
+  resultOverlay.classList.add('page-result');
   resultOverlay.style.removeProperty('display');
   resultOverlay.style.removeProperty('opacity');
   resultOverlay.style.removeProperty('visibility');
   resultOverlay.style.removeProperty('pointer-events');
   resultOverlay.setAttribute('aria-hidden','false');
-  // Force one layout pass before marking the match finished.
+  document.body.style.overflow='';
+  window.scrollTo({top:0,behavior:'auto'});
   void resultOverlay.offsetHeight;
-  return resultOverlay.getBoundingClientRect().width>0 && resultOverlay.getBoundingClientRect().height>0;
+  return !resultOverlay.classList.contains('hidden') && resultOverlay.getBoundingClientRect().height>0;
 }
 
 function finishGame(auto=false){
@@ -1101,15 +1129,13 @@ function finishGame(auto=false){
     const overlayOpened=openResultOverlay();
     if(!overlayOpened)throw new Error('摘要視窗未成功顯示');
     state.phase='finished';
-    requestAnimationFrame(()=>{
-      if(resultOverlay.classList.contains('open'))document.body.style.overflow='hidden';
-    });
   }catch(error){
     console.error(error);
     // 發生錯誤時恢復可操作狀態，不留下鎖定頁面。
     if(state&&state.phase==='finished')state.phase='normal';
-    resultOverlay.classList.remove('open','visible');
+    resultOverlay.classList.remove('open','visible','page-result');
     resultOverlay.classList.add('hidden');
+    scoreboard.classList.remove('hidden');
     resultOverlay.style.display='none';
     resultOverlay.setAttribute('aria-hidden','true');
     document.body.style.overflow='';
@@ -1155,7 +1181,7 @@ function render(){
   bottomControls.classList.toggle('white-turn',state.active==='white');bottomControls.classList.toggle('yellow-turn',state.active==='yellow');
   const nextSide=state.active==='white'?'yellow':'white';switchBtn.textContent=state.active==='white'?`換 ${state[nextSide].name} →`:`← 換 ${state[nextSide].name}`;
 }
-function newGame(){clearInterval(timer);resultOverlay.classList.remove('open','visible');resultOverlay.classList.add('hidden');resultOverlay.style.display='';resultOverlay.setAttribute('aria-hidden','true');document.body.style.overflow='';finishing=false;syncStatus.classList.add('hidden');scoreboard.classList.add('hidden');setup.classList.remove('hidden');state=null;pendingRecord=null;undoStack=[];}
+function newGame(){clearInterval(timer);resultOverlay.classList.remove('open','visible','page-result');resultOverlay.classList.add('hidden');resultOverlay.style.display='';resultOverlay.setAttribute('aria-hidden','true');document.body.style.overflow='';finishing=false;syncStatus.classList.add('hidden');scoreboard.classList.add('hidden');setup.classList.remove('hidden');state=null;pendingRecord=null;undoStack=[];}
 
 function syncSelfSideFields(){
   const side=selfSideInput.value;
