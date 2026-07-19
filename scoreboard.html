@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.2.7">
+<link rel="stylesheet" href="css/style.css?v=5.2.7.1">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -276,6 +276,13 @@ body>nav{display:block}
 @media (display-mode:standalone) and (orientation:landscape) and (max-height:950px){
   .scoreboard:not(.hidden){height:100dvh}
 }
+
+/* v5.2.7 hotfix: compact scoring controls */
+.player-controls .score-btn{min-height:50px!important;height:50px;font-size:1.42rem!important;border-radius:14px!important}
+.quick-score-row button{min-height:38px!important;height:38px;font-size:.98rem!important;border-radius:11px!important}
+.score-controls-wrap{gap:8px!important}.player-controls{gap:10px!important}.quick-score-row{gap:7px!important}
+@media(max-width:920px){.player-controls .score-btn{min-height:48px!important;height:48px}.quick-score-row button{min-height:36px!important;height:36px}}
+
 </style>
 </head>
 <body>
@@ -758,29 +765,40 @@ function populateScoreFavoritePlayers(players){
 
 function finishGame(auto=false){
   if(!state)return;
-  if(!auto&&!confirm('確定要結束這場比賽並查看摘要嗎？'))return;
+  if(!auto&&!window.confirm('確定要結束這場比賽並查看摘要嗎？'))return;
 
-  finalizeActiveRun();
-  clearInterval(timer);
+  try{
+    finalizeActiveRun();
+    clearInterval(timer);
 
-  const record=buildScoreboardRecord();
-  pendingRecord=record;
-  latestRecordsGame=buildRecordsGame(record);
+    const record=buildScoreboardRecord();
+    pendingRecord=record;
+    latestRecordsGame=buildRecordsGame(record);
 
-  const winner=state.white.score===state.yellow.score
-    ?'和局'
-    :state.white.score>state.yellow.score
-      ?state.white.name
-      :state.yellow.name;
+    const winner=state.white.score===state.yellow.score
+      ?'和局'
+      :state.white.score>state.yellow.score
+        ?state.white.name
+        :state.yellow.name;
 
-  resultScore.textContent=`${state.white.score} ： ${state.yellow.score}｜${winner==='和局'?'和局':winner+' 勝'}`;
-  statsGrid.innerHTML=
-    statHTML(state.white,playerStats(state.white),'white')+
-    statHTML(state.yellow,playerStats(state.yellow),'yellow');
+    const scoreEl=document.getElementById('resultScore');
+    const gridEl=document.getElementById('statsGrid');
+    const statusEl=document.getElementById('syncStatus');
+    const overlayEl=document.getElementById('resultOverlay');
+    if(!scoreEl||!gridEl||!statusEl||!overlayEl)throw new Error('找不到比賽摘要元件');
 
-  syncStatus.classList.remove('hidden','error');
-  syncStatus.innerHTML=`本場用時 <strong>${fmt(record.durationSeconds*1000)}</strong>${record.matchName?`<br>活動：${escapeScoreText(record.matchName)}`:''}${record.stake?`<br>賭注：${escapeScoreText(record.stake)}`:''}`;
-  resultOverlay.classList.remove('hidden');
+    scoreEl.textContent=`${state.white.score} ： ${state.yellow.score}｜${winner==='和局'?'和局':winner+' 勝'}`;
+    gridEl.innerHTML=
+      statHTML(state.white,playerStats(state.white),'white')+
+      statHTML(state.yellow,playerStats(state.yellow),'yellow');
+
+    statusEl.classList.remove('hidden','error');
+    statusEl.innerHTML=`本場用時 <strong>${fmt(record.durationSeconds*1000)}</strong>${record.matchName?`<br>活動：${escapeScoreText(record.matchName)}`:''}${record.stake?`<br>賭注：${escapeScoreText(record.stake)}`:''}`;
+    overlayEl.classList.remove('hidden');
+  }catch(error){
+    console.error('finishGame failed',error);
+    alert('無法開啟比賽摘要，請重新整理後再試。錯誤：'+(error?.message||error));
+  }
 }
 
 function escapeScoreText(value){

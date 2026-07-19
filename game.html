@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.7"><link rel="manifest" href="manifest.json"></head><body>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.7.1"><link rel="manifest" href="manifest.json"></head><body>
 <header><div class="wrap"><h1 id="pageTitle">個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a id="practiceNav" href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a id="multiNav" href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
@@ -14,7 +14,7 @@
 
 <div id="starterFields" class="hidden" style="margin-top:10px">
   <label for="starterSelect">先開始的球員</label>
-  <select id="starterSelect"></select>
+  <select id="starterSelect" onchange="applyStarterToOrder()"></select>
 </div>
 <div id="practice" style="margin-top:10px"><label>練球模式</label><select id="practiceMode"><option>單一母球</option><option>白黃交錯</option><option>任意母球</option></select></div>
 <div id="duelNames" class="hidden" style="margin-top:10px">
@@ -162,7 +162,7 @@
     </div>
   </div>
 </div>
-<script src="js/common.js?v=5.2.7"></script><script>
+<script src="js/common.js?v=5.2.7.1"></script><script>
 let scores=[],cp=0,started=0,lastShotAt=0,timer=0,reachedAt=0;
 let undoStack=[];
 let inputMode="live";
@@ -352,11 +352,45 @@ function syncMultiFavoriteChips(){
  document.querySelectorAll('.multi-favorite-chip').forEach(btn=>btn.classList.toggle('selected',current.includes(btn.dataset.player)));
 }
 
+function orderedParticipantNames(){
+ return [...orders.querySelectorAll('input')]
+   .map((input,index)=>({name:input.dataset.name,order:Number(input.value)||999,index}))
+   .filter(item=>item.name)
+   .sort((a,b)=>a.order-b.order||a.index-b.index)
+   .map(item=>item.name);
+}
+function renderParticipantOrder(names){
+ orders.innerHTML=names.map((n,i)=>`<div class="participant ${n==='我'?'self-participant':''}"><input type="number" min="1" max="${names.length}" value="${i+1}" data-name="${escapeHTML(n)}" onchange="syncOrderFromInputs(this)"><div>${escapeHTML(n)}${n==='我'?' <span class="self-participant-badge">個人紀錄</span>':''}</div></div>`).join('');
+}
+function applyStarterToOrder(){
+ if(activityType.value!=='多人追分')return;
+ const starter=starterSelect.value;
+ const names=orderedParticipantNames();
+ if(!starter||!names.includes(starter))return;
+ renderParticipantOrder([starter,...names.filter(name=>name!==starter)]);
+ syncMultiFavoriteChips();
+}
+function syncOrderFromInputs(changedInput){
+ const rows=[...orders.querySelectorAll('input')];
+ if(!rows.length)return;
+ const desired=Math.max(1,Math.min(rows.length,Number(changedInput?.value)||1));
+ const changedName=changedInput?.dataset.name;
+ const names=rows.map(input=>input.dataset.name).filter(Boolean);
+ const remaining=names.filter(name=>name!==changedName);
+ remaining.splice(desired-1,0,changedName);
+ renderParticipantOrder(remaining);
+ starterSelect.value=remaining[0]||'';
+}
 function participantUI(){
+ const previousOrder=orderedParticipantNames();
  const others=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean).filter((name,index,array)=>name!=='我'&&array.indexOf(name)===index);
- const ns=['我',...others];
- orders.innerHTML=ns.map((n,i)=>`<div class="participant ${n==='我'?'self-participant':''}"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}${n==='我'?' <span class="self-participant-badge">個人紀錄</span>':''}</div></div>`).join('');
- updateStarterOptions();syncMultiFavoriteChips();
+ const available=['我',...others];
+ const preserved=previousOrder.filter(name=>available.includes(name));
+ const ns=[...preserved,...available.filter(name=>!preserved.includes(name))];
+ renderParticipantOrder(ns);
+ updateStarterOptions();
+ if(ns.length&&!starterSelect.value)starterSelect.value=ns[0];
+ syncMultiFavoriteChips();
 }
 function meta(){stakeAmount.value=stakeAmountGrid.value;const t=activityType.value;if(t==='獨自練球')return{practiceMode:practiceMode.value};if(t==='單打無賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='單打有賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',stakeAmount:stakeAmount.value,starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='正式比賽')return{competitionName:competitionName.value,selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};return{stakeAmount:stakeAmount.value,starterName:starterSelect.value,participants:[...orders.querySelectorAll('input')].map(x=>({name:x.dataset.name,order:Number(x.value)})).sort((a,b)=>a.order-b.order)}}
 function startGame(){
