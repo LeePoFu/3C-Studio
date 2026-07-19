@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.2.1.1">
+<link rel="stylesheet" href="css/style.css?v=5.2.2.1">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -221,27 +221,114 @@ body>nav{display:block}
 .scoreboard:not(.hidden){position:fixed;inset:0;z-index:100;background:#eef3f8;color:#0f172a}
 @media(max-width:700px){.scoreboard-setup-card .form-grid{grid-template-columns:1fr}.scoreboard-setup-card{padding:18px}}
 
+
+/* ===== v5.2.2 compact duel setup ===== */
+.scoreboard-setup-card{max-width:820px;margin:auto}
+.scoreboard-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field-half,.field-full{min-width:0}
+.field-full{grid-column:1/-1}
+.player-picker-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:8px}
+.player-picker-row input,.player-picker-row select{min-width:0}
+.scoreboard-setup-card input,.scoreboard-setup-card select{width:100%!important;max-width:none!important}
+@media(max-width:700px){
+  .scoreboard-form-grid{grid-template-columns:1fr 1fr;gap:12px 10px}
+  .field-full{grid-column:1/-1}
+  .player-picker-row{grid-template-columns:minmax(0,1fr) 124px}
+  .scoreboard-setup-card label{font-size:.9rem}
+  .scoreboard-setup-card input,.scoreboard-setup-card select{min-height:48px;padding:10px;font-size:.95rem}
+}
+@media(max-width:430px){
+  .player-picker-row{grid-template-columns:minmax(0,1fr) 112px}
+}
+
 </style>
 </head>
 <body>
 <header><div class="wrap"><h1>雙人對戰</h1><div class="sub">設定雙方球員與目標分數後開始計分</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a href="game.html?mode=practice">個人練習</a><a class="active" href="scoreboard.html">對戰</a><a href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
-<main id="setup"><section class="card scoreboard-setup-card"><h2>本局設定</h2><div class="form-grid">
-<div><label>日期</label><input id="matchDate" type="date"></div>
-<div><label>時間</label><input id="matchTime" type="time"></div>
-<div><label>地點（選填）</label><input id="matchVenue" placeholder="球館或場地"></div>
-<div><label>活動／比賽名稱（選填）</label><input id="matchName" placeholder="例如：週五球聚、排名賽"></div>
-<div><label>賭注（選填）</label><input id="stakeInput" placeholder="例如：500、飲料一杯"></div>
-<div><label>白球球員姓名</label><input id="whiteName" list="scoreFavoritePlayers" value="白球球員"></div><div><label>黃球球員姓名</label><input id="yellowName" list="scoreFavoritePlayers" value="黃球球員"></div><div><label>目標分數</label><input id="targetInput" type="number" min="1" value="20"></div><div><label>先攻球員</label><select id="starterInput"><option value="white">白球</option><option value="yellow">黃球</option></select></div><div><label>白球起始分數／讓分</label><input id="whiteStart" type="number" min="0" value="0"></div><div><label>黃球起始分數／讓分</label><input id="yellowStart" type="number" min="0" value="0"></div>
-      <div>
-        <label>這場比賽中，我是哪一方？</label>
-        <select id="selfSideInput">
-          <option value="white" selected>白球球員是我</option>
-          <option value="yellow">黃球球員是我</option>
-          <option value="none">不指定我方，不加入個人 Records</option>
-        </select>
-      </div>
-      <div><label>End Game 剩餘分數提醒</label><select id="endGameThreshold"><option value="0">不顯示</option><option value="3">剩 3 分開始</option><option value="5" selected>剩 5 分開始</option><option value="999">全程顯示</option></select></div></div><datalist id="scoreFavoritePlayers"></datalist><div class="scoreboard-setup-actions"><button class="start-btn" onclick="startGame()">開始比賽</button><a class="button-link" href="index.html">← 返回首頁</a></div></section></main>
+<main id="setup"><section class="card scoreboard-setup-card"><h2>本局設定</h2><div class="scoreboard-form-grid">
+  <div class="field-half">
+    <label>日期</label>
+    <input id="matchDate" type="date">
+  </div>
+  <div class="field-half">
+    <label>時間</label>
+    <input id="matchTime" type="time">
+  </div>
+
+  <div class="field-half">
+    <label>地點（選填）</label>
+    <input id="matchVenue" placeholder="球館或場地">
+  </div>
+  <div class="field-half">
+    <label>活動／比賽名稱（選填）</label>
+    <input id="matchName" placeholder="例如：週五球聚">
+  </div>
+
+  <div class="field-half">
+    <label>賭注（選填）</label>
+    <input id="stakeInput" placeholder="例如：500、飲料一杯">
+  </div>
+  <div class="field-half">
+    <label>目標分數</label>
+    <input id="targetInput" type="number" min="1" value="20">
+  </div>
+
+  <div class="field-full player-picker-field">
+    <label>白球球員姓名</label>
+    <div class="player-picker-row">
+      <input id="whiteName" placeholder="輸入姓名">
+      <select id="whiteFavoriteSelect" onchange="applyFavoritePlayer('white')">
+        <option value="">常用球員</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field-full player-picker-field">
+    <label>黃球球員姓名</label>
+    <div class="player-picker-row">
+      <input id="yellowName" placeholder="輸入姓名">
+      <select id="yellowFavoriteSelect" onchange="applyFavoritePlayer('yellow')">
+        <option value="">常用球員</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field-half">
+    <label>先攻球員</label>
+    <select id="starterInput">
+      <option value="white">白球</option>
+      <option value="yellow">黃球</option>
+    </select>
+  </div>
+  <div class="field-half">
+    <label>這場比賽中，我是哪一方？</label>
+    <select id="selfSideInput">
+      <option value="white" selected>白球球員是我</option>
+      <option value="yellow">黃球球員是我</option>
+      <option value="none">不加入個人紀錄</option>
+    </select>
+  </div>
+
+  <div class="field-half">
+    <label>白球起始分數／讓分</label>
+    <input id="whiteStart" type="number" min="0" value="0">
+  </div>
+  <div class="field-half">
+    <label>黃球起始分數／讓分</label>
+    <input id="yellowStart" type="number" min="0" value="0">
+  </div>
+
+  <div class="field-full">
+    <label>End Game 剩餘分數提醒</label>
+    <select id="endGameThreshold">
+      <option value="0">不顯示</option>
+      <option value="3">剩 3 分開始</option>
+      <option value="5" selected>剩 5 分開始</option>
+      <option value="999">全程顯示</option>
+    </select>
+  </div>
+</div><div class="scoreboard-setup-actions"><button class="start-btn" onclick="startGame()">開始比賽</button><a class="button-link" href="index.html">← 返回首頁</a></div></section></main>
 <section class="scoreboard hidden" id="scoreboard"><div class="topbar"><div class="top-left"><a href="index.html" aria-label="回首頁" style="color:#f8fafc;text-decoration:none;font-weight:950;font-size:1.1rem">⌂</a><div class="top-stat"><div class="top-label">經過時間</div><div class="top-value" id="elapsed">00:00</div></div><div class="top-stat"><div class="top-label">目前 INN</div><div class="top-value" id="inning">1</div></div></div><div class="title">3-CUSHION SCOREBOARD</div><div class="top-right"><div class="top-stat"><div class="top-label">目標分數</div><div class="top-value" id="targetDisplay">20</div></div><div class="top-stat"><div class="top-label">目前球員</div><div class="top-value" id="activeName">—</div></div></div></div>
 <div class="players"><article class="player white" id="whitePanel">
       <div class="player-badge hidden" id="whiteActive">目前出杆</div>
@@ -340,6 +427,16 @@ function blankPlayer(name,start){
 }
 
 function startGame(){
+  const whitePlayerName=whiteName.value.trim();
+  const yellowPlayerName=yellowName.value.trim();
+  if(!whitePlayerName||!yellowPlayerName){
+    alert('請輸入或選擇白球與黃球球員姓名。');
+    return;
+  }
+  if(whitePlayerName===yellowPlayerName){
+    alert('白球與黃球球員姓名不可相同。');
+    return;
+  }
   const target=Math.max(1,Number(targetInput.value)||20);
   const starter=starterInput.value;
   const now=Date.now();
@@ -627,6 +724,19 @@ function finalizeActiveRun(){
   state.finalized=true;
 }
 
+
+function populateScoreFavoritePlayers(players){
+  const options='<option value="">常用球員</option>'+players.map(name=>`<option value="${escapeScoreText(name)}">${escapeScoreText(name)}</option>`).join('');
+  whiteFavoriteSelect.innerHTML=options;
+  yellowFavoriteSelect.innerHTML=options;
+}
+function applyFavoritePlayer(side){
+  const select=side==='white'?whiteFavoriteSelect:yellowFavoriteSelect;
+  const input=side==='white'?whiteName:yellowName;
+  if(select.value)input.value=select.value;
+  select.selectedIndex=0;
+}
+
 function finishGame(auto=false){
   if(!state)return;
   if(!auto&&!confirm('確定要結束這場比賽並查看摘要嗎？'))return;
@@ -759,10 +869,8 @@ function newGame(){
   try{
     const prefs=JSON.parse(localStorage.getItem('threeCushionPreferences_v1')||'{}');
     targetInput.value=prefs.defaultTarget||20;
-    const list=document.getElementById('scoreFavoritePlayers');
-    if(list&&Array.isArray(prefs.favoritePlayers)){
-      list.innerHTML=prefs.favoritePlayers.map(name=>`<option value="${String(name).replace(/"/g,'&quot;')}"></option>`).join('');
-    }
+    const players=Array.isArray(prefs.favoritePlayers)?prefs.favoritePlayers:[];
+    populateScoreFavoritePlayers(players);
     const venues=Array.isArray(prefs.favoriteVenues)?prefs.favoriteVenues:[];if(prefs.defaultVenue)matchVenue.value=prefs.defaultVenue;else if(venues.length)matchVenue.value=venues[0];
   }catch(e){targetInput.value=20}
   const now=new Date();

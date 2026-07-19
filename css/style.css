@@ -659,3 +659,7 @@ header{background:linear-gradient(135deg,var(--pro-primary),var(--pro-primary-da
 /* v5.2.1 setup buttons */
 .setup-action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .setup-action-row button,.setup-action-row .button-link{margin:0;min-height:52px;border-radius:14px;background:#0f766e;color:#fff;border:0;display:flex;align-items:center;justify-content:center}
+
+/* ===== v5.2.2 favorite-player selectors ===== */
+.multi-favorite-row{display:grid;grid-template-columns:minmax(0,1fr) 86px;gap:8px}
+.multi-favorite-row button{min-height:48px;padding:10px}
