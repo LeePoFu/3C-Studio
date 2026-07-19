@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.3.2">
+<link rel="stylesheet" href="css/style.css?v=5.3.3">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -323,41 +323,68 @@ body>nav{display:block}
 .player.endgame .score-area{gap:4px!important}
 @media(max-width:700px){.phase-banner{font-size:.82rem;padding:6px 10px}.remaining{font-size:.88rem!important;padding:4px 10px!important}}
 
-/* ===== v5.3.2 fixes ===== */
+/* ===== v5.3.3 fixes ===== */
 .scoreboard-setup-card #matchModeInput,
 .scoreboard-setup-card #equalInningInput{
+  box-sizing:border-box!important;
   height:58px!important;
   min-height:58px!important;
-  padding:0 46px 0 16px!important;
-  line-height:58px!important;
+  max-height:58px!important;
+  padding:0 42px 0 16px!important;
+  line-height:normal!important;
   border-radius:16px!important;
-  appearance:auto;
-  -webkit-appearance:menulist;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  background-color:#fff!important;
+  background-image:linear-gradient(45deg,transparent 50%,#0f172a 50%),linear-gradient(135deg,#0f172a 50%,transparent 50%)!important;
+  background-position:calc(100% - 20px) 24px,calc(100% - 14px) 24px!important;
+  background-size:6px 6px,6px 6px!important;
+  background-repeat:no-repeat!important;
 }
 .run-status-row{
   width:100%;
-  min-height:44px;
-  margin-top:8px;
+  min-height:58px;
+  margin-top:10px;
+  margin-bottom:10px;
+  padding:4px 0;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:12px;
   flex-wrap:nowrap;
+  position:relative;
+  z-index:3;
 }
 .run-status-row .run-line{
-  margin-top:0;
+  margin:0;
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   white-space:nowrap;
+  line-height:1.25;
 }
 .run-status-row .remaining{
-  margin-top:0;
+  margin:0;
   padding:7px 13px;
   font-size:1rem;
   flex:0 0 auto;
 }
+.score-controls-wrap{margin-top:2px}
 @media(max-width:920px){
-  .run-status-row{min-height:40px;gap:9px}
-  .run-status-row .run-line{font-size:.96rem}
+  .run-status-row{min-height:54px;margin-top:8px;margin-bottom:8px;gap:9px}
+  .run-status-row .run-line{min-height:38px;font-size:.96rem}
   .run-status-row .remaining{padding:6px 11px;font-size:.92rem}
+}
+@media(max-width:430px){
+  .scoreboard-setup-card #matchModeInput,
+  .scoreboard-setup-card #equalInningInput{
+    height:48px!important;
+    min-height:48px!important;
+    max-height:48px!important;
+    padding:0 34px 0 10px!important;
+    background-position:calc(100% - 17px) 19px,calc(100% - 11px) 19px!important;
+  }
 }
 
 </style>
@@ -590,7 +617,7 @@ function activeElapsedMs(){
 function remainingMs(){return state?Math.max(0,state.timeLimitMs-activeElapsedMs()):0;}
 function fmt(ms){const total=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');}
 function snapshotState(){if(!state)return;undoStack.push(JSON.parse(JSON.stringify(state)));if(undoStack.length>30)undoStack.shift();}
-function undoLast(){if(!state||state.paused||!undoStack.length||finishing)return;state=undoStack.pop();render();}
+function undoLast(){if(!state||state.paused||!undoStack.length||state.phase==='finished')return;finishing=false;state=undoStack.pop();render();}
 
 function tick(){
   if(!state||state.paused||finishing)return render();
@@ -613,7 +640,8 @@ function tick(){
 }
 
 function changeScore(side,delta){
-  if(!state||state.paused||state.active!==side||finishing)return;
+  if(!state||state.paused||state.active!==side||state.phase==='finished')return;
+  finishing=false;
   snapshotState();
   const p=state[side];
   const nextRun=Math.max(0,p.run+delta),actualDelta=nextRun-p.run;
@@ -629,7 +657,11 @@ function changeScore(side,delta){
       state.phase='leader-at-target';
     }
   }
-  // 後攻期間不在加分瞬間結束，讓球員完成整杆；按下「換人」後再統一判定。
+  // 黃球後攻即使達標或超越，也只更新分數；不鎖畫面、不提前結束。
+  // 必須由使用者按下「換我」完成本杆，再進行勝負判定。
+  if(state.mode==='target'&&state.equalInning&&side==='yellow'&&state.phase==='equal-inning'){
+    finishing=false;
+  }
   render();
 }
 
@@ -642,7 +674,8 @@ function commitRun(side){
 }
 
 function switchPlayer(){
-  if(!state||state.paused||finishing)return;
+  if(!state||state.paused||state.phase==='finished')return;
+  finishing=false;
   snapshotState();
   const side=state.active;
   commitRun(side);
@@ -695,7 +728,7 @@ function switchPlayer(){
   render();
 }
 
-function togglePause(){if(!state||finishing)return;snapshotState();if(!state.paused){state.paused=true;state.pausedAt=Date.now();}else{state.totalPausedMs+=Date.now()-state.pausedAt;state.paused=false;state.pausedAt=0;}render();}
+function togglePause(){if(!state||state.phase==='finished')return;finishing=false;snapshotState();if(!state.paused){state.paused=true;state.pausedAt=Date.now();}else{state.totalPausedMs+=Date.now()-state.pausedAt;state.paused=false;state.pausedAt=0;}render();}
 function playerStats(p){const earned=p.score-p.startScore,avg=p.turns?earned/p.turns:0;return{earned,avg,scoringRate:p.turns?p.scoringTurns/p.turns:0,zeroRate:p.turns?p.zeroTurns/p.turns:0};}
 function buildScoreboardRecord(){
   const w=playerStats(state.white),y=playerStats(state.yellow);
@@ -706,7 +739,7 @@ function buildRecordsGame(record){
   const selfSide=state.selfSide;if(selfSide==='none')return null;
   const opponentSide=selfSide==='white'?'yellow':'white',self=record[selfSide],opponent=record[opponentSide];
   const selfParticipant=participantForRecords(selfSide,'self',record),opponentParticipant=participantForRecords(opponentSide,'opponent',record);
-  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.2',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
+  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.3',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
 }
 function syncToRecords(record){const game=buildRecordsGame(record);if(!game)return{synced:false,message:'未指定我方，因此只保存 Scoreboard 紀錄。'};let games=[];try{games=JSON.parse(localStorage.getItem(RECORDS_KEY)||'[]')}catch{}if(!Array.isArray(games))games=[];if(games.some(item=>item?.externalMatchId===game.externalMatchId||item?.id===game.externalMatchId))return{synced:false,message:'此比賽已存在於 Training Records，未重複同步。'};games.push(game);localStorage.setItem(RECORDS_KEY,JSON.stringify(games));return{synced:true,message:'已直接存入 Records。'};}
 function finalizeActiveRun(){if(!state||state.finalized)return;const p=state[state.active];if(p.run>0)commitRun(state.active);state.finalized=true;}
@@ -735,6 +768,7 @@ function finishGame(auto=false){
     resultOverlay.setAttribute('aria-hidden','false');
     document.body.style.overflow='hidden';
     requestAnimationFrame(()=>resultOverlay.classList.add('visible'));
+    finishing=false;
   }catch(error){
     finishing=false;
     console.error(error);
