@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.2"><link rel="manifest" href="manifest.json"></head><body>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.3"><link rel="manifest" href="manifest.json"></head><body>
 <header><div class="wrap"><h1 id="pageTitle">個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a id="practiceNav" href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a id="multiNav" href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
@@ -29,13 +29,8 @@
   <div class="note">可用於讓分。例如對方讓我 5 分，就將「我的起始分數」設為 5。</div>
 </div><div id="stake" class="hidden" style="margin-top:10px"><label>賭注金額</label><input type="number" id="stakeAmount" min="0"></div><div id="competition" class="hidden" style="margin-top:10px"><label>比賽名稱</label><input id="competitionName"></div>
 <div id="multi" class="hidden" style="margin-top:10px">
-      <label>從常用球員加入</label>
-      <div class="multi-favorite-row">
-        <select id="multiFavoriteSelect">
-          <option value="">選擇常用球員</option>
-        </select>
-        <button type="button" onclick="addMultiFavoritePlayer()">加入</button>
-      </div>
+      <label>常用球員</label>
+      <div id="multiFavoritePlayers" class="multi-favorite-chips"></div>
       <label style="margin-top:10px">參與者姓名</label>
       <input id="multiNames" placeholder="可輸入多位姓名，以逗號分隔" oninput="participantUI()">
       <div id="orders" class="participants"></div>
@@ -162,7 +157,7 @@
     </div>
   </div>
 </div>
-<script src="js/common.js?v=5.2.2"></script><script>
+<script src="js/common.js?v=5.2.3"></script><script>
 let scores=[],cp=0,started=0,lastShotAt=0,timer=0,reachedAt=0;
 let undoStack=[];
 let inputMode="live";
@@ -328,21 +323,26 @@ function activityUI(){
 }
 
 function populateMultiFavoritePlayers(players){
- const select=document.getElementById('multiFavoriteSelect');
- if(!select)return;
- select.innerHTML='<option value="">選擇常用球員</option>'+players.map(name=>`<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`).join('');
+ const box=document.getElementById('multiFavoritePlayers');
+ if(!box)return;
+ box.innerHTML=players.length
+  ?players.map(name=>`<button type="button" class="multi-favorite-chip" data-player="${escapeHTML(name)}" onclick="toggleMultiFavoritePlayer(this.dataset.player)">${escapeHTML(name)}</button>`).join('')
+  :'<div class="note">尚未設定常用球員，可到「設定」新增。</div>';
+ syncMultiFavoriteChips();
 }
-function addMultiFavoritePlayer(){
- const select=document.getElementById('multiFavoriteSelect');
- if(!select||!select.value)return;
+function toggleMultiFavoritePlayer(name){
  const current=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);
- if(!current.includes(select.value))current.push(select.value);
+ const index=current.indexOf(name);
+ if(index>=0)current.splice(index,1);else current.push(name);
  multiNames.value=current.join('、');
- select.selectedIndex=0;
  participantUI();
 }
+function syncMultiFavoriteChips(){
+ const current=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);
+ document.querySelectorAll('.multi-favorite-chip').forEach(btn=>btn.classList.toggle('selected',current.includes(btn.dataset.player)));
+}
 
-function participantUI(){const ns=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);orders.innerHTML=ns.map((n,i)=>`<div class="participant"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}</div></div>`).join('');updateStarterOptions()}
+function participantUI(){const ns=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);orders.innerHTML=ns.map((n,i)=>`<div class="participant"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}</div></div>`).join('');updateStarterOptions();syncMultiFavoriteChips()}
 function meta(){const t=activityType.value;if(t==='獨自練球')return{practiceMode:practiceMode.value};if(t==='單打無賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='單打有賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',stakeAmount:stakeAmount.value,starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='正式比賽')return{competitionName:competitionName.value,selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};return{stakeAmount:stakeAmount.value,starterName:starterSelect.value,participants:[...orders.querySelectorAll('input')].map(x=>({name:x.dataset.name,order:Number(x.value)})).sort((a,b)=>a.order-b.order)}}
 function startGame(){
  if(Number(targetScore.value)<1)return alert('請輸入目標得分');

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.2.2.1">
+<link rel="stylesheet" href="css/style.css?v=5.2.3.1">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -222,23 +222,29 @@ body>nav{display:block}
 @media(max-width:700px){.scoreboard-setup-card .form-grid{grid-template-columns:1fr}.scoreboard-setup-card{padding:18px}}
 
 
-/* ===== v5.2.2 compact duel setup ===== */
+/* ===== v5.2.3 compact duel setup ===== */
 .scoreboard-setup-card{max-width:820px;margin:auto}
 .scoreboard-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .field-half,.field-full{min-width:0}
 .field-full{grid-column:1/-1}
-.player-picker-row{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:8px}
-.player-picker-row input,.player-picker-row select{min-width:0}
+.player-name-field{padding:12px;border:1px solid #dbe3ec;border-radius:16px;background:#f8fafc}
+.player-name-field label{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.player-ball-dot{width:15px;height:15px;border-radius:50%;display:inline-block;border:1px solid rgba(15,23,42,.25)}
+.player-ball-dot.white{background:#fff}.player-ball-dot.yellow{background:#fde047}
+.player-name-field input{margin:0}
+.player-name-help{margin-top:6px;font-size:.78rem;color:#64748b}
 .scoreboard-setup-card input,.scoreboard-setup-card select{width:100%!important;max-width:none!important}
 @media(max-width:700px){
   .scoreboard-form-grid{grid-template-columns:1fr 1fr;gap:12px 10px}
   .field-full{grid-column:1/-1}
-  .player-picker-row{grid-template-columns:minmax(0,1fr) 124px}
   .scoreboard-setup-card label{font-size:.9rem}
   .scoreboard-setup-card input,.scoreboard-setup-card select{min-height:48px;padding:10px;font-size:.95rem}
+  .player-name-field{padding:10px}
 }
 @media(max-width:430px){
-  .player-picker-row{grid-template-columns:minmax(0,1fr) 112px}
+  .scoreboard-form-grid{grid-template-columns:1fr 1fr;gap:10px 8px}
+  .player-name-field{padding:8px}
+  .player-name-help{display:none}
 }
 
 </style>
@@ -274,25 +280,18 @@ body>nav{display:block}
     <input id="targetInput" type="number" min="1" value="20">
   </div>
 
-  <div class="field-full player-picker-field">
-    <label>白球球員姓名</label>
-    <div class="player-picker-row">
-      <input id="whiteName" placeholder="輸入姓名">
-      <select id="whiteFavoriteSelect" onchange="applyFavoritePlayer('white')">
-        <option value="">常用球員</option>
-      </select>
-    </div>
+  <div class="field-half player-name-field">
+    <label><span class="player-ball-dot white"></span>白球球員</label>
+    <input id="whiteName" list="favoritePlayersList" placeholder="輸入或選擇姓名" autocomplete="off">
+    <div class="player-name-help">可直接輸入，或從常用球員建議中選擇</div>
   </div>
 
-  <div class="field-full player-picker-field">
-    <label>黃球球員姓名</label>
-    <div class="player-picker-row">
-      <input id="yellowName" placeholder="輸入姓名">
-      <select id="yellowFavoriteSelect" onchange="applyFavoritePlayer('yellow')">
-        <option value="">常用球員</option>
-      </select>
-    </div>
+  <div class="field-half player-name-field">
+    <label><span class="player-ball-dot yellow"></span>黃球球員</label>
+    <input id="yellowName" list="favoritePlayersList" placeholder="輸入或選擇姓名" autocomplete="off">
+    <div class="player-name-help">姓名預設留白，不自動代入</div>
   </div>
+  <datalist id="favoritePlayersList"></datalist>
 
   <div class="field-half">
     <label>先攻球員</label>
@@ -458,8 +457,8 @@ function startGame(){
     paused:false,
     pausedAt:0,
     totalPausedMs:0,
-    white:blankPlayer(whiteName.value.trim()||'白球球員',Math.max(0,Number(whiteStart.value)||0)),
-    yellow:blankPlayer(yellowName.value.trim()||'黃球球員',Math.max(0,Number(yellowStart.value)||0)),
+    white:blankPlayer(whitePlayerName,Math.max(0,Number(whiteStart.value)||0)),
+    yellow:blankPlayer(yellowPlayerName,Math.max(0,Number(yellowStart.value)||0)),
     history:[]
   };
 
@@ -726,15 +725,9 @@ function finalizeActiveRun(){
 
 
 function populateScoreFavoritePlayers(players){
-  const options='<option value="">常用球員</option>'+players.map(name=>`<option value="${escapeScoreText(name)}">${escapeScoreText(name)}</option>`).join('');
-  whiteFavoriteSelect.innerHTML=options;
-  yellowFavoriteSelect.innerHTML=options;
-}
-function applyFavoritePlayer(side){
-  const select=side==='white'?whiteFavoriteSelect:yellowFavoriteSelect;
-  const input=side==='white'?whiteName:yellowName;
-  if(select.value)input.value=select.value;
-  select.selectedIndex=0;
+  const list=document.getElementById('favoritePlayersList');
+  if(!list)return;
+  list.innerHTML=players.map(name=>`<option value="${escapeScoreText(name)}"></option>`).join('');
 }
 
 function finishGame(auto=false){
