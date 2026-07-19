@@ -702,3 +702,9 @@ input[type="date"],input[type="time"]{
     width:100%!important;max-width:100%!important;min-width:0!important;
   }
 }
+
+
+/* ===== v5.2.7 multiplayer self identity ===== */
+.self-participant-note{margin-top:7px;color:#0f766e;font-weight:750}
+.participant.self-participant{background:#ecfdf5;border-color:#5eead4}
+.self-participant-badge{display:inline-flex;margin-left:7px;padding:3px 7px;border-radius:999px;background:#0f766e;color:#fff;font-size:.72rem;font-weight:850;vertical-align:middle}

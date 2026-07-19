@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.2.6">
+<link rel="stylesheet" href="css/style.css?v=5.2.7">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -247,6 +247,35 @@ body>nav{display:block}
   .player-name-help{display:none}
 }
 
+
+/* ===== v5.2.7 browser / standalone unified scoreboard ===== */
+.scoreboard:not(.hidden){
+  width:100%;height:100dvh;min-height:0;max-width:1800px;margin:0 auto;
+  grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;
+}
+.players{min-height:0;overflow:hidden}
+.player{min-height:0;grid-template-rows:auto minmax(0,1fr) auto}
+.score-area{min-height:0;padding:6px 0 10px}
+.run-line{margin-top:10px;margin-bottom:8px;line-height:1.25}
+.player-controls .score-btn{min-height:60px!important}
+.player.white .minus,.player.yellow .minus{background:#cbd5e1!important;color:#0f172a!important}
+.player.white .plus,.player.yellow .plus{background:#0f766e!important;color:#fff!important}
+@media (orientation:landscape) and (max-height:950px){
+  .scoreboard:not(.hidden){gap:7px;padding:max(7px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(7px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+  .topbar{min-height:54px;padding:7px 14px;border-radius:16px}
+  .top-label{font-size:.72rem}.top-value{font-size:1.15rem}.title{font-size:1rem}
+  .player{padding:10px 14px;border-radius:22px;border-width:4px}
+  .player-header{gap:10px}.ball{width:36px;height:36px}.player-name{font-size:1.18rem}
+  .score{font-size:clamp(4.7rem,15vh,8rem)}
+  .run-line{margin-top:7px;margin-bottom:7px;font-size:.9rem}
+  .score-controls-wrap{gap:7px}.player-controls{gap:9px}
+  .player-controls .score-btn{min-height:58px!important;font-size:1.65rem;border-radius:15px}
+  .quick-score-row{gap:7px}.quick-score-row button{min-height:40px;font-size:1rem;border-radius:12px}
+  .bottom{gap:8px}.bottom .control{min-height:52px;font-size:.93rem;border-radius:14px}
+}
+@media (display-mode:standalone) and (orientation:landscape) and (max-height:950px){
+  .scoreboard:not(.hidden){height:100dvh}
+}
 </style>
 </head>
 <body>

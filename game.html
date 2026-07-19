@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.6"><link rel="manifest" href="manifest.json"></head><body>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.7"><link rel="manifest" href="manifest.json"></head><body>
 <header><div class="wrap"><h1 id="pageTitle">個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a id="practiceNav" href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a id="multiNav" href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
@@ -36,7 +36,8 @@
       <label>常用球員</label>
       <div id="multiFavoritePlayers" class="multi-favorite-chips"></div>
       <label style="margin-top:10px">參與者姓名</label>
-      <input id="multiNames" placeholder="可輸入多位姓名，以逗號分隔" oninput="participantUI()">
+      <input id="multiNames" placeholder="輸入其他參與者姓名，以逗號分隔" oninput="participantUI()">
+      <div class="note self-participant-note">系統會自動加入「我」，不需將自己設為常用球員。</div>
       <div id="orders" class="participants"></div>
     </div>
 <div class="setup-action-row"><button type="button" onclick="startGame()">開始本局並計時</button><a class="button-link" href="index.html">← 返回首頁</a></div>
@@ -161,7 +162,7 @@
     </div>
   </div>
 </div>
-<script src="js/common.js?v=5.2.6"></script><script>
+<script src="js/common.js?v=5.2.7"></script><script>
 let scores=[],cp=0,started=0,lastShotAt=0,timer=0,reachedAt=0;
 let undoStack=[];
 let inputMode="live";
@@ -309,6 +310,7 @@ function applyActivityRoute(){
   practiceNav.classList.toggle('active',!multiplayer);
   multiNav.classList.toggle('active',multiplayer);
   activityUI();
+  if(multiplayer)participantUI();
 }
 
 function activityUI(){
@@ -350,7 +352,12 @@ function syncMultiFavoriteChips(){
  document.querySelectorAll('.multi-favorite-chip').forEach(btn=>btn.classList.toggle('selected',current.includes(btn.dataset.player)));
 }
 
-function participantUI(){const ns=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);orders.innerHTML=ns.map((n,i)=>`<div class="participant"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}</div></div>`).join('');updateStarterOptions();syncMultiFavoriteChips()}
+function participantUI(){
+ const others=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean).filter((name,index,array)=>name!=='我'&&array.indexOf(name)===index);
+ const ns=['我',...others];
+ orders.innerHTML=ns.map((n,i)=>`<div class="participant ${n==='我'?'self-participant':''}"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}${n==='我'?' <span class="self-participant-badge">個人紀錄</span>':''}</div></div>`).join('');
+ updateStarterOptions();syncMultiFavoriteChips();
+}
 function meta(){stakeAmount.value=stakeAmountGrid.value;const t=activityType.value;if(t==='獨自練球')return{practiceMode:practiceMode.value};if(t==='單打無賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='單打有賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',stakeAmount:stakeAmount.value,starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='正式比賽')return{competitionName:competitionName.value,selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};return{stakeAmount:stakeAmount.value,starterName:starterSelect.value,participants:[...orders.querySelectorAll('input')].map(x=>({name:x.dataset.name,order:Number(x.value)})).sort((a,b)=>a.order-b.order)}}
 function startGame(){
  if(Number(targetScore.value)<1)return alert('請輸入目標得分');
@@ -362,7 +369,7 @@ function startGame(){
 
  if(activityType.value==='多人追分'){
    participants=[...orders.querySelectorAll('input')]
-     .map(x=>({name:x.dataset.name,order:Number(x.value)||0}))
+     .map(x=>({name:x.dataset.name,order:Number(x.value)||0,role:x.dataset.name==='我'?'self':'participant'}))
      .filter(x=>x.name)
      .sort((a,b)=>a.order-b.order);
    if(!participants.length)return alert('請至少輸入一位參與者姓名');
