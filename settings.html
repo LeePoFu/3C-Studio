@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-Hant"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<link rel="stylesheet" href="css/style.css?v=5.3.1"><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><title>設定</title></head><body>
+<link rel="stylesheet" href="css/style.css?v=5.3.2"><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><title>設定</title></head><body>
 <header><div class="wrap"><h1>設定</h1><div class="sub">一般偏好、資料備份與版本資訊</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
@@ -14,7 +14,7 @@
 <section class="card"><h2>資料</h2><div class="actions"><button onclick="exportJSON()">匯出 JSON 備份</button><button class="light" onclick="importFile.click()">匯入 JSON 備份</button><button class="light" onclick="exportWorkbook('3C-training-history.xlsx',buildHistoryWorkbookData(loadHistory()))">匯出 Excel</button></div><input type="file" id="importFile" class="hidden" accept=".json" onchange="importJSON(event)"></section>
 <section class="card"><h2>資料狀態</h2><div class="metrics"><div class="metric"><div class="ml">目前局數</div><div class="mv" id="gameCount">0</div></div><div class="metric"><div class="ml">資料大小</div><div class="mv" id="dataSize">0 KB</div></div></div></section>
 <section class="card"><h2>系統</h2><p class="note">版本：v5.2.2<br>資料鍵：threeCushionTrainingLog_v1</p></section>
-</main><script src="js/common.js?v=5.3.1"></script><script>
+</main><script src="js/common.js?v=5.3.2"></script><script>
 const PREF_KEY='threeCushionPreferences_v1';function prefs(){try{return JSON.parse(localStorage.getItem(PREF_KEY))||{}}catch{return{}}}
 let favoritePlayerNames=[];
 let favoriteVenueNames=[];
