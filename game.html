@@ -1,10 +1,13 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css"><link rel="manifest" href="manifest.json"></head><body>
-<header><div class="wrap"><h1 id="pageTitle">3C Studio｜個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2"><link rel="manifest" href="manifest.json"></head><body>
+<header><div class="wrap"><h1 id="pageTitle">個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a id="practiceNav" href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a id="multiNav" href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
-<section class="card" id="setup"><h2>本局設定</h2><div class="professional-toggle"><div><strong>職業模式</strong><div class="note">開始後隱藏次要資訊，只保留主要計分操作。</div></div><input type="checkbox" id="professionalMode" style="width:auto;min-height:auto;transform:scale(1.3)"></div><div class="grid"><div><label>日期</label><input type="date" id="gameDate"></div><div><label>時間</label><input type="time" id="gameTime"></div><div><label>地點</label><input id="venue"></div></div>
-<div class="grid" style="margin-top:10px"><div><label>目標得分</label><input type="number" id="targetScore" min="1" value="20"></div><div><label>活動類型</label><select id="activityType" onchange="activityUI()"><option value="獨自練球">個人練習</option><option value="多人追分">多人追分</option></select></div></div>
-<div id="modeDescription" class="mode-description"></div>
+<section class="card" id="setup"><h2>本局設定</h2><div class="grid"><div><label>日期</label><input type="date" id="gameDate"></div><div><label>時間</label><input type="time" id="gameTime"></div><div><label>地點</label><input id="venue"></div></div>
+<div class="grid" style="margin-top:10px">
+      <div><label>目標得分</label><input type="number" id="targetScore" min="1" value="20"></div>
+    </div>
+    <input type="hidden" id="activityType" value="獨自練球">
+
 <div id="starterFields" class="hidden" style="margin-top:10px">
   <label for="starterSelect">先開始的球員</label>
   <select id="starterSelect"></select>
@@ -25,8 +28,15 @@
   </div>
   <div class="note">可用於讓分。例如對方讓我 5 分，就將「我的起始分數」設為 5。</div>
 </div><div id="stake" class="hidden" style="margin-top:10px"><label>賭注金額</label><input type="number" id="stakeAmount" min="0"></div><div id="competition" class="hidden" style="margin-top:10px"><label>比賽名稱</label><input id="competitionName"></div>
-<div id="multi" class="hidden" style="margin-top:10px"><label>參與者姓名</label><input id="multiNames" placeholder="以逗號分隔" oninput="participantUI()"><div id="orders" class="participants"></div></div>
-<button style="margin-top:14px" onclick="startGame()">開始本局並計時</button></section>
+<div id="multi" class="hidden" style="margin-top:10px">
+      <label>參與者姓名</label>
+      <input id="multiNames" list="favoritePlayersList" placeholder="可輸入多位姓名，以逗號分隔" oninput="participantUI()">
+      <datalist id="favoritePlayersList"></datalist>
+      <div id="orders" class="participants"></div>
+    </div>
+<button style="margin-top:14px" onclick="startGame()">開始本局並計時</button>
+      <a class="button-link light setup-home-link" href="index.html">← 返回首頁</a>
+    </section>
 
 
 
@@ -88,32 +98,36 @@
   </div>
 </section>
 
-<section class="card live hidden" id="live"><h2>即時計分</h2><p class="flow-hint">得分時按 +1；本杆結束時按下方橘色按鈕。按「上一步」可撤銷最近一次操作。</p>
-<div class="metrics">
-<div class="metric"><div class="ml">目前得分</div><div class="mv" id="total">0</div></div>
-<div class="metric"><div class="ml">杆數</div><div class="mv" id="shots">0</div></div>
-<div class="metric"><div class="ml">得分率</div><div class="mv" id="avg">0.000</div></div>
-<div class="metric"><div class="ml">單次擊球時間</div><div class="mv" id="shotClock">00:00</div></div>
-</div>
-<div class="progress"><div class="bar" id="bar"></div></div><div class="caption" id="progressText">0 / 20</div>
-<div class="caption" style="margin-top:18px">第 <span id="inn">1</span> 杆目前得分</div><div class="score" id="current">0</div>
+<section class="card live hidden" id="live">
+<h2>即時計分</h2>
+<p class="flow-hint">得分時按 +1；本杆結束時按「下一杆」。達到目標分數後會自動顯示本局摘要。</p>
+
+<div class="caption current-run-caption">第 <span id="inn">1</span> 杆目前得分</div>
+<div class="score" id="current">0</div>
+
 <div class="score-adjust-buttons">
   <button type="button" class="score-plus scoring-action" aria-label="目前這一杆加一分" onclick="adjust(1)">+1</button>
   <button type="button" class="score-minus scoring-action" aria-label="目前這一杆減一分" onclick="adjust(-1)">−1</button>
 </div>
 
-<div class="primary-controls">
+<div class="practice-control-grid">
   <button type="button" class="commit-full scoring-action" onclick="commitInn()">下一杆 →</button>
-  <button type="button" class="pause-full scoring-action" id="livePauseButton" onclick="togglePause()">暫停時間</button>
   <button type="button" class="undo-full scoring-action" id="undoButton" onclick="undo()">↶ 上一步</button>
+  <button type="button" class="pause-full scoring-action" id="livePauseButton" onclick="togglePause()">暫停時間</button>
+  <button type="button" class="cancel-full scoring-action" onclick="cancelGame()">取消本局</button>
 </div>
 
-<div id="reached" class="banner hidden">已達成目標得分！</div>
+<div class="metrics live-metrics-below">
+  <div class="metric"><div class="ml">目前得分</div><div class="mv" id="total">0</div></div>
+  <div class="metric"><div class="ml">杆數</div><div class="mv" id="shots">0</div></div>
+  <div class="metric"><div class="ml">得分率</div><div class="mv" id="avg">0.000</div></div>
+  <div class="metric"><div class="ml">單次擊球時間</div><div class="mv" id="shotClock">00:00</div></div>
+</div>
 
-<div class="finish-controls">
-  <button type="button" class="finish-full scoring-action" onclick="finish()">完成並儲存本局</button>
-  <button type="button" class="cancel-full scoring-action" onclick="cancelGame()">取消本局</button>
-</div></section>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="caption" id="progressText">0 / 20</div>
+<div id="reached" class="banner hidden">已達成目標得分！</div>
+</section>
 
 <section class="card hidden secondary-info" id="list"><h2>已記錄出杆</h2><p class="note">每列代表一個 inning／整杆。「本杆時間」是從該球員開始本杆，到按下下一杆、下一位或換對手為止的有效時間；單顆擊球時間另存於節奏分析。</p>
 <div class="score-history" id="chips"></div>
@@ -129,7 +143,21 @@
     </table>
   </div>
 </section>
-</main><script src="js/common.js?v=5.1"></script><script>
+</main>
+<div class="studio-summary-overlay hidden" id="gameSummaryOverlay">
+  <div class="studio-summary-card">
+    <div class="eyebrow teal">ACTIVITY SUMMARY</div>
+    <h2 id="gameSummaryTitle">本局完成</h2>
+    <div class="studio-summary-score" id="gameSummaryScore">20 / 20</div>
+    <div class="studio-summary-grid" id="gameSummaryStats"></div>
+    <div class="result-question">是否保留本局紀錄？</div>
+    <div class="studio-summary-actions">
+      <button type="button" class="light" onclick="discardPendingGame()">不保留</button>
+      <button type="button" onclick="savePendingGame()">保留紀錄</button>
+    </div>
+  </div>
+</div>
+<script src="js/common.js?v=5.2"></script><script>
 let scores=[],cp=0,started=0,lastShotAt=0,timer=0,reachedAt=0;
 let undoStack=[];
 let inputMode="live";
@@ -270,13 +298,12 @@ function applyActivityRoute(){
   const mode=new URLSearchParams(location.search).get('mode')||'practice';
   const multiplayer=mode==='multiplayer';
   activityType.value=multiplayer?'多人追分':'獨自練球';
-  pageTitle.textContent=multiplayer?'3C Studio｜多人追分':'3C Studio｜個人練習';
+  pageTitle.textContent=multiplayer?'多人追分':'個人練習';
   pageSubtitle.textContent=multiplayer
     ?'依打擊順序輪替，記錄每位參與者的得分'
     :'逐杆記錄並分析自己的練習表現';
   practiceNav.classList.toggle('active',!multiplayer);
   multiNav.classList.toggle('active',multiplayer);
-  activityType.closest('div').classList.add('route-mode-field');
   activityUI();
 }
 
@@ -292,7 +319,6 @@ function activityUI(){
   '獨自練球':'逐次按 +1，失誤時提交本杆，可分析細部出杆節奏。',
   '多人追分':'每位球員下台後輸入整杆得分，系統依打擊次序自動輪替。'
  };
- modeDescription.textContent=descriptions[t]||'';
  updateStarterOptions();
 }
 function participantUI(){const ns=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);orders.innerHTML=ns.map((n,i)=>`<div class="participant"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}</div></div>`).join('');updateStarterOptions()}
@@ -334,7 +360,7 @@ function startGame(){
 
  started=Date.now();lastShotAt=started;actionTimerAt=started;quickInningStartedAt=started;updatePauseButtons();
  clearInterval(timer);timer=setInterval(updateActiveClock,500);
- setup.classList.add('hidden');document.body.classList.toggle('pro-mode',professionalMode.checked);
+ setup.classList.add('hidden');document.body.classList.remove('pro-mode');
 
  if(inputMode==='live'){
    live.classList.remove('hidden');
@@ -374,7 +400,9 @@ function commitInn(){
  if(!reachedAt&&s.totalPoints>=Number(targetScore.value)){
    reachedAt=now;
    reached.classList.remove('hidden');
-   if(confirm('已達成目標，是否完成本局？'))finish()
+   draw();
+   setTimeout(()=>showGameSummary(record()),120);
+   return;
  }
  draw()
 }
@@ -493,7 +521,13 @@ function commitQuickRun(){
    const reached=(activityType.value==='多人追分'||duelMode)
      ?participants.some(p=>(participantStats[p.name]?.totalPoints||0)>=Number(targetScore.value||30))
      :quickScores.reduce((sum,row)=>sum+Number(row.points||0),0)>=Number(targetScore.value||30);
-   if(reached)quickReachedAt=Date.now();
+   if(reached){
+     quickReachedAt=Date.now();
+     drawQuick();
+     updateQuickUndoButton();
+     setTimeout(()=>showGameSummary(quickRecord()),120);
+     return;
+   }
  }
 
  // 同一輪立即更新目前球員、記分板、統計與表格。
@@ -690,15 +724,7 @@ function quickRecord(){
 
 function finishQuick(){
  if(!quickScores.length)return alert('請至少記錄一杆');
- clearInterval(timer);
- const r=quickRecord();
- const msg=activityType.value==='多人追分'
-  ?`完成本局？\n已記錄 ${quickScores.length} 次輪替\n參與者 ${r.participants.length} 位`
-  :(duelMode
-    ?`完成本局？\n${r.duelResult.selfName} ${r.duelResult.selfScore}－${r.duelResult.opponentScore} ${r.duelResult.opponentName}\n結果：${r.duelResult.outcome}`
-    :`完成本局？\n得分 ${r.totalPoints}/${r.targetScore}\n杆數 ${r.totalShots}\nAVG ${r.avg.toFixed(3)}`);
- if(!confirm(msg)){timer=setInterval(updateActiveClock,500);return}
- const h=loadHistory();h.push(r);saveHistory(h);location.href='history.html';
+ showGameSummary(quickRecord());
 }
 
 function seconds(){return started?Math.max(0,Math.floor((effectiveNow()-started-totalPausedMs)/1000)):0}
@@ -714,7 +740,49 @@ function draw(){
  chips.innerHTML=scores.slice(-12).reverse().map(x=>`<div class="score-chip"><small>#${x.inn}</small><strong>${x.points}</strong><small>${duration(x.shotTimeSeconds)}</small></div>`).join('');
 }
 function record(){const s=stats(scores),ts=shotTimingStats([{scores}]);return{id:Date.now(),inputMode:'live',date:gameDate.value,time:gameTime.value,venue:venue.value,activityType:activityType.value,activityMeta:meta(),targetScore:Number(targetScore.value),scores:[...scores],totalPoints:s.totalPoints,totalShots:s.totalShots,avg:s.avg,highRun:s.highRun,zeroShots:s.zeroShots,zeroRate:s.zeroRate,durationSeconds:seconds(),averageShotTimeSeconds:ts.avg,targetCompleted:s.totalPoints>=Number(targetScore.value),targetReachedSeconds:reachedAt?Math.max(0,Math.floor((reachedAt-started-totalPausedMs)/1000)):null,totalGameSeconds:seconds(),totalPausedSeconds:Math.round(totalPausedMs/1000),actionTimingEvents:actionTimingEvents.map(x=>({...x})),runMetrics:runAnalysis([{scores}])}}
-function finish(){if(!scores.length)return alert('請至少記錄一杆');clearInterval(timer);const r=record();if(!confirm(`完成本局？\n得分 ${r.totalPoints}/${r.targetScore}\n杆數 ${r.totalShots}\nAVG ${r.avg.toFixed(3)}\n平均出杆 ${r.averageShotTimeSeconds.toFixed(1)} 秒`)){timer=setInterval(updateActiveClock,500);return}const h=loadHistory();h.push(r);saveHistory(h);location.href='history.html'}
+function showGameSummary(r){
+ pendingGameRecord=r;
+ clearInterval(timer);
+ const grouped=r.activityType==='多人追分';
+ gameSummaryTitle.textContent=grouped?'多人追分完成':'個人練習完成';
+ gameSummaryScore.textContent=grouped
+   ?`${r.participants?.length||0} 位參與者`
+   :`${r.totalPoints||0} / ${r.targetScore||0}`;
+ const rows=grouped
+   ?[
+      ['輪替紀錄',r.scores?.length||0],
+      ['參與者',r.participants?.length||0],
+      ['目標分數',r.targetScore||0],
+      ['耗時',duration(r.durationSeconds||0)]
+    ]
+   :[
+      ['杆數',r.totalShots||0],
+      ['AVG',Number(r.avg||0).toFixed(3)],
+      ['High Run',r.highRun||0],
+      ['耗時',duration(r.durationSeconds||0)]
+    ];
+ gameSummaryStats.innerHTML=rows.map(([label,value])=>`<div class="metric"><div class="ml">${label}</div><div class="mv">${value}</div></div>`).join('');
+ gameSummaryOverlay.classList.remove('hidden');
+}
+
+function finish(){
+ if(!scores.length)return alert('請至少記錄一杆');
+ showGameSummary(record());
+}
+
+function savePendingGame(){
+ if(!pendingGameRecord)return;
+ const h=loadHistory();h.push(pendingGameRecord);saveHistory(h);
+ pendingGameRecord=null;
+ location.href='history.html';
+}
+
+function discardPendingGame(){
+ if(!confirm('確定不保留本局紀錄？'))return;
+ pendingGameRecord=null;
+ location.href='index.html';
+}
+
 function cancelGame(){if(confirm('確定取消本局？'))location.reload()}
 function preventScoringZoom(){
  document.querySelectorAll('.scoring-action').forEach(button=>{
@@ -730,7 +798,14 @@ function preventScoringZoom(){
  },{passive:false});
 }
 
-window.addEventListener('DOMContentLoaded',()=>{try{const p=JSON.parse(localStorage.getItem('threeCushionPreferences_v1')||'{}');if(p.defaultTarget)targetScore.value=p.defaultTarget;if(p.defaultVenue)venue.value=p.defaultVenue}catch(e){}
+window.addEventListener('DOMContentLoaded',()=>{try{
+ const p=JSON.parse(localStorage.getItem('threeCushionPreferences_v1')||'{}');
+ targetScore.value=p.defaultTarget||20;
+ if(p.defaultVenue)venue.value=p.defaultVenue;
+ const players=Array.isArray(p.favoritePlayers)?p.favoritePlayers:[];
+ const list=document.getElementById('favoritePlayersList');
+ if(list)list.innerHTML=players.map(name=>`<option value="${escapeHTML(name)}"></option>`).join('');
+}catch(e){targetScore.value=20}
  nowFields();
  applyActivityRoute();
  updateUndoButton();

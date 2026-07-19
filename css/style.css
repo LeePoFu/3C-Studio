@@ -620,3 +620,38 @@ header{background:linear-gradient(135deg,var(--pro-primary),var(--pro-primary-da
 .multiplayer-card .activity-icon{background:#ffedd5;color:#c2410c;font-size:.82rem}
 .route-mode-field select{font-weight:900;background:#f8fafc}
 @media(max-width:760px){.activity-grid{grid-template-columns:1fr}.activity-card{min-height:160px}}
+
+
+/* ===== 3C Studio v5.2 Compact UX ===== */
+.compact-hero-stats{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px;width:100%}
+.compact-hero-stats .metric{min-width:0}
+.activity-icon-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.activity-icon-link{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:8px;text-decoration:none;color:#0f172a;font-weight:900;min-width:0}
+.activity-round-icon{width:70px;height:70px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:#e8f7f4;color:#0f766e;font-size:1.3rem;font-weight:950;box-shadow:0 7px 18px rgba(15,23,42,.08)}
+.duel-icon .activity-round-icon{background:#dbeafe;color:#1d4ed8}
+.multi-icon .activity-round-icon{background:#ffedd5;color:#c2410c;font-size:.9rem}
+.activity-icon-link span:last-child{font-size:.94rem;line-height:1.2}
+.setup-home-link{margin-top:10px}
+.current-run-caption{margin-top:4px}
+.practice-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.practice-control-grid button{margin:0;min-height:56px}
+.live-metrics-below{margin-top:14px}
+.studio-summary-overlay{position:fixed;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px}
+.studio-summary-card{width:min(520px,100%);background:#fff;border-radius:24px;padding:24px;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+.studio-summary-score{text-align:center;font-size:2.4rem;font-weight:950;color:#0f766e;margin:16px 0}
+.studio-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.studio-summary-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.result-question{text-align:center;font-weight:900;margin-top:18px}
+.favorite-player-entry{display:grid;grid-template-columns:1fr auto;gap:8px}
+.favorite-player-entry button{min-width:82px}
+.favorite-player-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.favorite-player-chip{display:inline-flex;align-items:center;gap:5px;background:#e8f7f4;color:#115e59;border-radius:999px;padding:7px 8px 7px 12px;font-weight:800}
+.favorite-player-chip button{min-height:auto;width:26px;height:26px;padding:0;border-radius:50%;background:#0f766e}
+@media(max-width:520px){
+ .dashboard-hero{gap:12px}
+ .compact-hero-stats{grid-template-columns:1fr 1fr!important}
+ .activity-round-icon{width:62px;height:62px;border-radius:19px}
+ .activity-icon-link span:last-child{font-size:.86rem}
+ .practice-control-grid button{min-height:52px;padding:9px}
+ .studio-summary-card{padding:18px}
+}

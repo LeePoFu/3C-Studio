@@ -174,16 +174,44 @@ html,body{background:var(--bg);color:var(--text);-webkit-user-select:none;user-s
   .setup{padding:12px}.setup-card{padding:18px}.form-grid{grid-template-columns:1fr}
 }
 
+
+/* v5.2 phone height optimization */
+.setup-card h1{font-size:1.55rem}
+.scoreboard{gap:8px;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+.topbar{min-height:54px;padding:7px 12px;border-radius:16px}
+.players{gap:8px}
+.player{border-radius:20px;padding:11px;border-width:4px}
+.ball{width:34px;height:34px}
+.player-name{font-size:1.15rem}
+.score{font-size:clamp(5rem,15vh,9rem)}
+.run-line{margin-top:5px;font-size:.92rem}
+.score-btn{min-height:58px;border-radius:15px;font-size:1.6rem}
+.control{min-height:50px;border-radius:14px;font-size:.96rem}
+.bottom{gap:8px}
+@media(max-width:700px){
+ .scoreboard{min-height:100dvh}
+ .topbar{grid-template-columns:1fr auto 1fr}
+ .top-left,.top-right{gap:8px}
+ .top-stat:nth-child(n+3){display:none}
+ .players{min-height:0}
+ .player-header{gap:8px}
+ .player-target{font-size:.78rem}
+ .score{font-size:clamp(4.4rem,13vh,7rem)}
+ .player-controls{gap:7px}
+ .score-btn{min-height:52px}
+ .control{min-height:46px;padding:6px}
+}
+
 </style>
 </head>
 <body>
-<section class="setup" id="setup"><div class="setup-card"><h1>3C Studio｜比賽計分</h1><div class="sub">一般對戰與正式比賽共用此頁；活動名稱與賭注皆為選填。</div><div class="form-grid">
+<section class="setup" id="setup"><div class="setup-card"><h1>雙人對戰</h1><div class="sub">設定雙方球員與目標分數後開始計分</div><div class="form-grid">
 <div><label>日期</label><input id="matchDate" type="date"></div>
 <div><label>時間</label><input id="matchTime" type="time"></div>
 <div><label>地點（選填）</label><input id="matchVenue" placeholder="球館或場地"></div>
 <div><label>活動／比賽名稱（選填）</label><input id="matchName" placeholder="例如：週五球聚、排名賽"></div>
 <div><label>賭注（選填）</label><input id="stakeInput" placeholder="例如：500、飲料一杯"></div>
-<div><label>白球球員姓名</label><input id="whiteName" value="白球球員"></div><div><label>黃球球員姓名</label><input id="yellowName" value="黃球球員"></div><div><label>目標分數</label><input id="targetInput" type="number" min="1" value="20"></div><div><label>先攻球員</label><select id="starterInput"><option value="white">白球</option><option value="yellow">黃球</option></select></div><div><label>白球起始分數／讓分</label><input id="whiteStart" type="number" min="0" value="0"></div><div><label>黃球起始分數／讓分</label><input id="yellowStart" type="number" min="0" value="0"></div>
+<div><label>白球球員姓名</label><input id="whiteName" list="scoreFavoritePlayers" value="白球球員"></div><div><label>黃球球員姓名</label><input id="yellowName" list="scoreFavoritePlayers" value="黃球球員"></div><div><label>目標分數</label><input id="targetInput" type="number" min="1" value="20"></div><div><label>先攻球員</label><select id="starterInput"><option value="white">白球</option><option value="yellow">黃球</option></select></div><div><label>白球起始分數／讓分</label><input id="whiteStart" type="number" min="0" value="0"></div><div><label>黃球起始分數／讓分</label><input id="yellowStart" type="number" min="0" value="0"></div>
       <div>
         <label>這場比賽中，我是哪一方？</label>
         <select id="selfSideInput">
@@ -192,7 +220,7 @@ html,body{background:var(--bg);color:var(--text);-webkit-user-select:none;user-s
           <option value="none">不指定我方，不加入個人 Records</option>
         </select>
       </div>
-      <div><label>End Game 剩餘分數提醒</label><select id="endGameThreshold"><option value="0">不顯示</option><option value="3">剩 3 分開始</option><option value="5" selected>剩 5 分開始</option><option value="999">全程顯示</option></select></div></div><button class="start-btn" onclick="startGame()">開始比賽</button><a href="index.html" style="display:block;text-align:center;margin-top:14px;color:#94a3b8;font-weight:800;text-decoration:none">← 返回 3C Studio 首頁</a></div></section>
+      <div><label>End Game 剩餘分數提醒</label><select id="endGameThreshold"><option value="0">不顯示</option><option value="3">剩 3 分開始</option><option value="5" selected>剩 5 分開始</option><option value="999">全程顯示</option></select></div></div><datalist id="scoreFavoritePlayers"></datalist><button class="start-btn" onclick="startGame()">開始比賽</button><a href="index.html" style="display:block;text-align:center;margin-top:14px;color:#94a3b8;font-weight:800;text-decoration:none">← 返回 3C Studio 首頁</a></div></section>
 <section class="scoreboard hidden" id="scoreboard"><div class="topbar"><div class="top-left"><a href="index.html" aria-label="回首頁" style="color:#f8fafc;text-decoration:none;font-weight:950;font-size:1.1rem">⌂</a><div class="top-stat"><div class="top-label">經過時間</div><div class="top-value" id="elapsed">00:00</div></div><div class="top-stat"><div class="top-label">目前 INN</div><div class="top-value" id="inning">1</div></div></div><div class="title">3-CUSHION SCOREBOARD</div><div class="top-right"><div class="top-stat"><div class="top-label">目標分數</div><div class="top-value" id="targetDisplay">20</div></div><div class="top-stat"><div class="top-label">目前球員</div><div class="top-value" id="activeName">—</div></div></div></div>
 <div class="players"><article class="player white" id="whitePanel">
       <div class="player-badge hidden" id="whiteActive">目前出杆</div>
@@ -208,7 +236,7 @@ html,body{background:var(--bg);color:var(--text);-webkit-user-select:none;user-s
         <div class="score" id="whiteScore">0</div>
         <div class="remaining hidden" id="whiteRemaining">剩 0</div>
         <div class="run-line">本杆目前連得 <span id="whiteRun">0</span></div>
-        <div class="high-run-line">High Run <span id="whiteHighRun">0</span></div>
+        <span class="hidden" id="whiteHighRun">0</span>
       </div>
 
       <div class="score-controls-wrap">
@@ -238,7 +266,7 @@ html,body{background:var(--bg);color:var(--text);-webkit-user-select:none;user-s
         <div class="score" id="yellowScore">0</div>
         <div class="remaining hidden" id="yellowRemaining">剩 0</div>
         <div class="run-line">本杆目前連得 <span id="yellowRun">0</span></div>
-        <div class="high-run-line">High Run <span id="yellowHighRun">0</span></div>
+        <span class="hidden" id="yellowHighRun">0</span>
       </div>
 
       <div class="score-controls-wrap">
@@ -707,6 +735,15 @@ function newGame(){
 }
 
 (function initializeMatchSetup(){
+  try{
+    const prefs=JSON.parse(localStorage.getItem('threeCushionPreferences_v1')||'{}');
+    targetInput.value=prefs.defaultTarget||20;
+    const list=document.getElementById('scoreFavoritePlayers');
+    if(list&&Array.isArray(prefs.favoritePlayers)){
+      list.innerHTML=prefs.favoritePlayers.map(name=>`<option value="${String(name).replace(/"/g,'&quot;')}"></option>`).join('');
+    }
+    if(prefs.defaultVenue)matchVenue.value=prefs.defaultVenue;
+  }catch(e){targetInput.value=20}
   const now=new Date();
   const localDate=new Date(now.getTime()-now.getTimezoneOffset()*60000);
   matchDate.value=localDate.toISOString().slice(0,10);
