@@ -1061,7 +1061,7 @@ function buildRecordsGame(record){
   const selfSide=state.selfSide;if(selfSide==='none')return null;
   const opponentSide=selfSide==='white'?'yellow':'white',self=record[selfSide],opponent=record[opponentSide];
   const selfParticipant=participantForRecords(selfSide,'self',record),opponentParticipant=participantForRecords(opponentSide,'opponent',record);
-  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.6',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
+  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.7',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
 }
 function syncToRecords(record){const game=buildRecordsGame(record);if(!game)return{synced:false,message:'未指定我方，因此只保存 Scoreboard 紀錄。'};let games=[];try{games=JSON.parse(localStorage.getItem(RECORDS_KEY)||'[]')}catch{}if(!Array.isArray(games))games=[];if(games.some(item=>item?.externalMatchId===game.externalMatchId||item?.id===game.externalMatchId))return{synced:false,message:'此比賽已存在於 Training Records，未重複同步。'};games.push(game);localStorage.setItem(RECORDS_KEY,JSON.stringify(games));return{synced:true,message:'已直接存入 Records。'};}
 function finalizeActiveRun(){if(!state||state.finalized)return;const p=state[state.active];if(p.run>0)commitRun(state.active);state.finalized=true;}
@@ -1225,3 +1225,25 @@ favoriteOpponentSelect.addEventListener('change',applyFavoriteOpponent);
 })();
 
 </script></body></html>
+
+<style>
+/* ===== v5.3.7 precise score-button text centering ===== */
+.player-controls .score-btn,
+.quick-score-row button{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  line-height:1!important;
+  text-align:center!important;
+  vertical-align:middle!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+}
+.player-controls .score-btn{
+  padding-bottom:2px!important;
+}
+.quick-score-row button{
+  padding-bottom:1px!important;
+}
+</style>
