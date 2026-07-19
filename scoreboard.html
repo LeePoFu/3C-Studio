@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.3.3">
+<link rel="stylesheet" href="css/style.css?v=5.3.4">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -387,6 +387,100 @@ body>nav{display:block}
   }
 }
 
+
+
+/* ===== v5.3.4 verified sizing, score layout, and result flow ===== */
+.scoreboard-setup-card{
+  --setup-control-height:52px;
+}
+.scoreboard-setup-card input,
+.scoreboard-setup-card select,
+.scoreboard-setup-card #matchModeInput,
+.scoreboard-setup-card #equalInningInput{
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:var(--setup-control-height)!important;
+  min-height:var(--setup-control-height)!important;
+  max-height:var(--setup-control-height)!important;
+  padding:0 14px!important;
+  line-height:1.2!important;
+  border-radius:14px!important;
+  font:inherit!important;
+}
+.scoreboard-setup-card select,
+.scoreboard-setup-card #matchModeInput,
+.scoreboard-setup-card #equalInningInput{
+  padding-right:40px!important;
+  text-align-last:center;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  background-color:#fff!important;
+  background-image:linear-gradient(45deg,transparent 50%,#0f172a 50%),linear-gradient(135deg,#0f172a 50%,transparent 50%)!important;
+  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%!important;
+  background-size:6px 6px,6px 6px!important;
+  background-repeat:no-repeat!important;
+}
+.score-area{
+  display:grid!important;
+  grid-template-rows:minmax(0,1fr) 48px!important;
+  align-items:center!important;
+  gap:4px!important;
+  padding:4px 0 8px!important;
+}
+.score-area>.score{align-self:center;line-height:.9!important}
+.run-status-row{
+  align-self:stretch!important;
+  width:100%!important;
+  height:48px!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:0 4px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  overflow:visible!important;
+}
+.run-status-row .run-line{
+  min-height:44px!important;
+  height:44px!important;
+  margin:0!important;
+  padding:0 4px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+}
+.run-status-row .remaining{
+  min-height:36px!important;
+  height:36px!important;
+  margin:0!important;
+  padding:0 13px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.run-status-row .remaining.hidden{display:none!important}
+.score-controls-wrap{margin-top:0!important}
+.player-controls .score-btn{
+  height:46px!important;
+  min-height:46px!important;
+}
+.quick-score-row button{
+  height:36px!important;
+  min-height:36px!important;
+}
+.result-overlay.visible{
+  display:flex!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+}
+@media(max-width:700px){
+  .scoreboard-setup-card{--setup-control-height:48px}
+}
+
 </style>
 </head>
 <body>
@@ -674,27 +768,43 @@ function commitRun(side){
 }
 
 function switchPlayer(){
-  if(!state||state.paused||state.phase==='finished')return;
+  if(!state||state.paused||state.phase==='finished'||finishing)return;
   finishing=false;
   snapshotState();
   const side=state.active;
   commitRun(side);
 
+  // 目標分數＋後攻：只有在「一杆結束（按換人）」時判定勝負。
   if(state.mode==='target'&&state.equalInning){
-    if(side==='yellow'&&state.phase==='yellow-at-target'){
-      if(state.yellow.score>state.white.score){state.resultReason='黃球達標並領先';return finishGame(true);}
-      state.phase='overtime';state.inning+=1;state.active='white';render();return;
-    }
+    // 白球先達標：白球本杆結束後，黃球取得最後後攻。
     if(side==='white'&&(state.phase==='leader-at-target'||state.white.score>=state.target)){
-      state.phase='equal-inning';state.active='yellow';render();return;
+      state.phase='equal-inning';
+      state.active='yellow';
+      render();
+      return;
     }
+
+    // 黃球在一般輪次先達標：完成本杆後直接依雙方分數判定；平手進延長。
+    if(side==='yellow'&&state.phase==='yellow-at-target'){
+      return resolveCompletedYellowTurn('黃球達標並領先','達標後平手，進入延長賽');
+    }
+
+    // 黃球最後後攻完成：領先黃勝、落後白勝、平手延長。
     if(side==='yellow'&&state.phase==='equal-inning'){
-      if(state.yellow.score>state.white.score){state.resultReason='黃球後攻超越';return finishGame(true);}
-      if(state.yellow.score<state.white.score){state.resultReason='後攻結束，白球領先';return finishGame(true);}
-      state.phase='overtime';state.inning+=1;state.active='white';render();return;
+      return resolveCompletedYellowTurn('黃球後攻超越','後攻結束仍平手，進入延長賽');
     }
+
+    // 延長賽須等黃球完成同一輪後才判定。
     if(state.phase==='overtime'&&side==='yellow'){
-      if(state.white.score!==state.yellow.score){state.resultReason='延長賽決勝';return finishGame(true);}
+      if(state.white.score!==state.yellow.score){
+        state.resultReason='延長賽決勝';
+        finishGame(true);
+        return;
+      }
+      state.inning+=1;
+      state.active='white';
+      render();
+      return;
     }
   }
 
@@ -715,16 +825,38 @@ function switchPlayer(){
         return;
       }
       state.resultReason=state.yellow.score>state.white.score?'限時後攻逆轉':'限時後攻結束，白球領先';
-      return finishGame(true);
+      finishGame(true);
+      return;
     }
   }
 
   if(state.mode==='timed'&&state.phase==='timed-sudden-death'&&side==='yellow'&&state.white.score!==state.yellow.score){
-    state.resultReason='限時平手後驟死決勝';return finishGame(true);
+    state.resultReason='限時平手後驟死決勝';
+    finishGame(true);
+    return;
   }
 
-  const next=side==='white'?'yellow':'white';state.active=next;
+  const next=side==='white'?'yellow':'white';
+  state.active=next;
   if(next===state.starter)state.inning+=1;
+  render();
+}
+
+function resolveCompletedYellowTurn(winReason,tieReason){
+  if(state.yellow.score>state.white.score){
+    state.resultReason=winReason;
+    finishGame(true);
+    return;
+  }
+  if(state.yellow.score<state.white.score){
+    state.resultReason='後攻結束，白球領先';
+    finishGame(true);
+    return;
+  }
+  state.phase='overtime';
+  state.resultReason=tieReason;
+  state.inning+=1;
+  state.active='white';
   render();
 }
 
@@ -739,42 +871,72 @@ function buildRecordsGame(record){
   const selfSide=state.selfSide;if(selfSide==='none')return null;
   const opponentSide=selfSide==='white'?'yellow':'white',self=record[selfSide],opponent=record[opponentSide];
   const selfParticipant=participantForRecords(selfSide,'self',record),opponentParticipant=participantForRecords(opponentSide,'opponent',record);
-  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.3',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
+  return{id:state.matchId,externalMatchId:state.matchId,source:'ipad-scoreboard',sourceVersion:'5.3.4',importedFromScoreboard:true,date:record.date||new Date().toISOString().slice(0,10),time:record.time||'',venue:record.venue||'',createdAt:new Date().toISOString(),activityType:'對戰',inputMode:'run-total',targetScore:record.target||0,totalGameSeconds:record.durationSeconds,durationSeconds:record.durationSeconds,totalPausedSeconds:record.totalPausedSeconds,targetCompleted:record.mode==='target'&&(self.score>=record.target||opponent.score>=record.target),activityMeta:{matchName:record.matchName||'',competitionName:record.matchName||'',venue:record.venue||'',stakeAmount:record.stake||'',selfName:'我',selfDisplayName:self.name,opponentName:opponent.name,starterName:state.starter===selfSide?'我':opponent.name,selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),matchMode:record.mode,equalInning:record.equalInning,timeLimitMinutes:record.timeLimitMinutes,resultReason:record.resultReason},participants:[selfParticipant,opponentParticipant],duelResult:{selfStartingScore:Number(self.startScore||0),opponentStartingScore:Number(opponent.startScore||0),selfEarnedPoints:Number(self.earned||0),opponentEarnedPoints:Number(opponent.earned||0),selfScore:Number(self.score||0),opponentScore:Number(opponent.score||0),outcome:self.score>opponent.score?'勝':self.score<opponent.score?'敗':'和'},totalPoints:selfParticipant.earnedPoints,totalShots:selfParticipant.totalShots,avg:selfParticipant.avg,highRun:selfParticipant.highRun,scores:selfParticipant.scores,actionTimingEvents:[]};
 }
 function syncToRecords(record){const game=buildRecordsGame(record);if(!game)return{synced:false,message:'未指定我方，因此只保存 Scoreboard 紀錄。'};let games=[];try{games=JSON.parse(localStorage.getItem(RECORDS_KEY)||'[]')}catch{}if(!Array.isArray(games))games=[];if(games.some(item=>item?.externalMatchId===game.externalMatchId||item?.id===game.externalMatchId))return{synced:false,message:'此比賽已存在於 Training Records，未重複同步。'};games.push(game);localStorage.setItem(RECORDS_KEY,JSON.stringify(games));return{synced:true,message:'已直接存入 Records。'};}
 function finalizeActiveRun(){if(!state||state.finalized)return;const p=state[state.active];if(p.run>0)commitRun(state.active);state.finalized=true;}
 function populateScoreFavoritePlayers(players){const select=document.getElementById('favoriteOpponentSelect');if(!select)return;select.innerHTML='<option value="">請選擇常用球員</option>'+players.map(name=>`<option value="${escapeScoreText(name)}">${escapeScoreText(name)}</option>`).join('');}
 
 function finishGame(auto=false){
-  if(!state||finishing)return;
+  if(!state||state.phase==='finished'||finishing)return;
   if(!auto&&!window.confirm('確定要結束這場比賽並查看摘要嗎？'))return;
+
   finishing=true;
   try{
     finalizeActiveRun();
     clearInterval(timer);
-    state.phase='finished';
     if(!state.resultReason)state.resultReason=auto?'規則判定結束':'手動結束';
-    const record=buildScoreboardRecord();
+
+    // 先建立摘要內容；任何同步欄位失敗都不能阻止摘要顯示。
+    let record;
+    try{record=buildScoreboardRecord();}
+    catch(recordError){
+      console.warn('buildScoreboardRecord failed',recordError);
+      record={
+        id:state.matchId,date:state.matchDate,time:state.matchTime,venue:state.venue,
+        matchName:state.matchName,stake:state.stake,mode:state.mode,target:state.target,
+        timeLimitMinutes:state.timeLimitMinutes,equalInning:state.equalInning,
+        resultReason:state.resultReason,durationSeconds:Math.round(activeElapsedMs()/1000),
+        white:JSON.parse(JSON.stringify(state.white)),yellow:JSON.parse(JSON.stringify(state.yellow))
+      };
+    }
     pendingRecord=record;
     try{latestRecordsGame=buildRecordsGame(record);}catch(syncBuildError){latestRecordsGame=null;console.warn(syncBuildError);}
+
+    const whiteStats=playerStats(state.white);
+    const yellowStats=playerStats(state.yellow);
     const winner=state.white.score===state.yellow.score?'和局':state.white.score>state.yellow.score?state.white.name:state.yellow.name;
     resultScore.textContent=`${state.white.score} ： ${state.yellow.score}｜${winner==='和局'?'和局':winner+' 勝'}`;
-    statsGrid.innerHTML=statHTML(state.white,playerStats(state.white),'white')+statHTML(state.yellow,playerStats(state.yellow),'yellow');
+    statsGrid.innerHTML=statHTML(state.white,whiteStats,'white')+statHTML(state.yellow,yellowStats,'yellow');
     const modeText=state.mode==='timed'?`限時驟死賽 ${state.timeLimitMinutes} 分鐘／${state.equalInning?'有後攻':'無後攻'}`:`目標 ${state.target} 分／${state.equalInning?'有後攻':'無後攻'}`;
     syncStatus.classList.remove('hidden','error');
-    syncStatus.innerHTML=`${escapeScoreText(modeText)}<br>${escapeScoreText(state.resultReason)}<br>本場用時 <strong>${fmt(record.durationSeconds*1000)}</strong>${record.matchName?`<br>活動：${escapeScoreText(record.matchName)}`:''}${record.stake?`<br>賭注：${escapeScoreText(record.stake)}`:''}`;
+    syncStatus.innerHTML=`${escapeScoreText(modeText)}<br>${escapeScoreText(state.resultReason)}<br>本場用時 <strong>${fmt((record.durationSeconds||0)*1000)}</strong>${record.matchName?`<br>活動：${escapeScoreText(record.matchName)}`:''}${record.stake?`<br>賭注：${escapeScoreText(record.stake)}`:''}`;
+
+    // 摘要確實開啟後，才把比賽狀態標記為 finished，避免只鎖畫面卻沒有摘要。
     resultOverlay.classList.remove('hidden');
+    resultOverlay.classList.add('visible');
     resultOverlay.style.display='flex';
+    resultOverlay.style.opacity='1';
+    resultOverlay.style.visibility='visible';
+    resultOverlay.style.pointerEvents='auto';
     resultOverlay.setAttribute('aria-hidden','false');
     document.body.style.overflow='hidden';
-    requestAnimationFrame(()=>resultOverlay.classList.add('visible'));
-    finishing=false;
+    state.phase='finished';
   }catch(error){
-    finishing=false;
     console.error(error);
+    // 發生錯誤時恢復可操作狀態，不留下鎖定頁面。
+    if(state&&state.phase==='finished')state.phase='normal';
+    resultOverlay.classList.add('hidden');
+    resultOverlay.classList.remove('visible');
+    resultOverlay.style.display='none';
+    resultOverlay.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
     alert('無法開啟比賽摘要。錯誤：'+(error&&error.message?error.message:error));
+  }finally{
+    finishing=false;
   }
 }
+
 function escapeScoreText(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function saveResult(){if(!pendingRecord)return;let saved=[];try{saved=JSON.parse(localStorage.getItem(SCOREBOARD_KEY)||'[]')}catch{}if(!Array.isArray(saved))saved=[];if(!saved.some(item=>item.id===pendingRecord.id)){saved.push(pendingRecord);localStorage.setItem(SCOREBOARD_KEY,JSON.stringify(saved));}const result=syncToRecords(pendingRecord);pendingRecord=null;alert(result.synced?'已保留並存入歷史紀錄。':result.message);location.href='history.html';}
 function discardResult(){if(!confirm('確定不保留本場紀錄？此動作無法復原。'))return;pendingRecord=null;newGame();}
