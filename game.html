@@ -1,14 +1,14 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.4"><link rel="manifest" href="manifest.json"></head><body>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.5"><link rel="manifest" href="manifest.json"></head><body>
 <header><div class="wrap"><h1 id="pageTitle">個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a id="practiceNav" href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a id="multiNav" href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
 <section class="card" id="setup"><h2>本局設定</h2>
-<div class="setup-fields-grid" id="setupFieldsGrid">
+<div class="setup-fields-grid" id="mainSetupGrid">
   <div><label>日期</label><input type="date" id="gameDate"></div>
   <div><label>時間</label><input type="time" id="gameTime"></div>
   <div><label>地點</label><input id="venue"></div>
-  <div id="targetScoreField"><label>目標得分</label><input type="number" id="targetScore" min="1" value="20"></div>
-  <div id="stake" class="hidden"><label>賭注金額</label><input type="number" id="stakeAmount" min="0"></div>
+  <div id="targetField"><label>目標得分</label><input type="number" id="targetScore" min="1" value="20"></div>
+  <div id="stakeGridField" class="hidden"><label>賭注金額</label><input type="number" id="stakeAmountGrid" min="0"></div>
 </div>
     <input type="hidden" id="activityType" value="獨自練球">
 
@@ -31,7 +31,7 @@
     </div>
   </div>
   <div class="note">可用於讓分。例如對方讓我 5 分，就將「我的起始分數」設為 5。</div>
-</div><div id="competition" class="hidden" style="margin-top:10px"><label>比賽名稱</label><input id="competitionName"></div>
+</div><div id="stake" class="hidden"><input type="hidden" id="stakeAmount"></div><div id="competition" class="hidden" style="margin-top:10px"><label>比賽名稱</label><input id="competitionName"></div>
 <div id="multi" class="hidden" style="margin-top:10px">
       <label>常用球員</label>
       <div id="multiFavoritePlayers" class="multi-favorite-chips"></div>
@@ -161,7 +161,7 @@
     </div>
   </div>
 </div>
-<script src="js/common.js?v=5.2.3"></script><script>
+<script src="js/common.js?v=5.2.5"></script><script>
 let scores=[],cp=0,started=0,lastShotAt=0,timer=0,reachedAt=0;
 let undoStack=[];
 let inputMode="live";
@@ -316,11 +316,12 @@ function activityUI(){
  practice.classList.toggle('hidden',t!=='獨自練球');
  duelNames.classList.add('hidden');
  stake.classList.toggle('hidden',t!=='多人追分');
- targetScoreField.classList.toggle('hidden',t==='多人追分');
- setupFieldsGrid.classList.toggle('multiplayer-layout',t==='多人追分');
- if(t==='多人追分')targetScore.value=999999;else if(Number(targetScore.value)>100000)targetScore.value=20;
  competition.classList.add('hidden');
  multi.classList.toggle('hidden',t!=='多人追分');
+ const isMulti=t==='多人追分';
+ targetField.classList.toggle('hidden',isMulti);
+ stakeGridField.classList.toggle('hidden',!isMulti);
+ mainSetupGrid.classList.toggle('multiplayer-layout',isMulti);
 
  const descriptions={
   '獨自練球':'逐次按 +1，失誤時提交本杆，可分析細部出杆節奏。',
@@ -350,9 +351,9 @@ function syncMultiFavoriteChips(){
 }
 
 function participantUI(){const ns=multiNames.value.split(/[,，、\n]/).map(x=>x.trim()).filter(Boolean);orders.innerHTML=ns.map((n,i)=>`<div class="participant"><input type="number" min="1" value="${i+1}" data-name="${escapeHTML(n)}"><div>${escapeHTML(n)}</div></div>`).join('');updateStarterOptions();syncMultiFavoriteChips()}
-function meta(){const t=activityType.value;if(t==='獨自練球')return{practiceMode:practiceMode.value};if(t==='單打無賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='單打有賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',stakeAmount:stakeAmount.value,starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='正式比賽')return{competitionName:competitionName.value,selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};return{stakeAmount:stakeAmount.value,starterName:starterSelect.value,participants:[...orders.querySelectorAll('input')].map(x=>({name:x.dataset.name,order:Number(x.value)})).sort((a,b)=>a.order-b.order)}}
+function meta(){stakeAmount.value=stakeAmountGrid.value;const t=activityType.value;if(t==='獨自練球')return{practiceMode:practiceMode.value};if(t==='單打無賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='單打有賭注')return{selfName:'我',opponentName:opponentName.value.trim()||'對手',stakeAmount:stakeAmount.value,starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};if(t==='正式比賽')return{competitionName:competitionName.value,selfName:'我',opponentName:opponentName.value.trim()||'對手',starterName:starterSelect.value,selfStartingScore:Number(selfStartingScore.value)||0,opponentStartingScore:Number(opponentStartingScore.value)||0};return{stakeAmount:stakeAmount.value,starterName:starterSelect.value,participants:[...orders.querySelectorAll('input')].map(x=>({name:x.dataset.name,order:Number(x.value)})).sort((a,b)=>a.order-b.order)}}
 function startGame(){
- if(activityType.value!=='多人追分'&&Number(targetScore.value)<1)return alert('請輸入目標得分');
+ if(Number(targetScore.value)<1)return alert('請輸入目標得分');
  inputMode=gameInputMode(activityType.value);
  scores=[];cp=0;reachedAt=0;undoStack=[];
  quickRunPoints=0;quickScores=[];quickUndoStack=[];

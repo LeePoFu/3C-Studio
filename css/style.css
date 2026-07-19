@@ -684,3 +684,21 @@ input,select,textarea,button,.button-link{max-width:100%;min-width:0}
  .setup-fields-grid input,.setup-fields-grid select,.scoreboard-form-grid input,.scoreboard-form-grid select{padding:9px 7px;font-size:.92rem;min-height:48px}
  .scoreboard-setup-card{padding:14px!important}
 }
+
+
+/* ===== v5.2.5 mobile field sizing and compact opponent picker ===== */
+.setup-fields-grid>div,.scoreboard-form-grid>div{min-width:0;width:100%}
+input[type="date"],input[type="time"]{
+  display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+  inline-size:100%!important;min-inline-size:0!important;box-sizing:border-box!important;
+  -webkit-appearance:none;appearance:none;
+}
+.favorite-opponent-field select{font-weight:800}
+@media(max-width:600px){
+  .setup-fields-grid,.setup-fields-grid.multiplayer-layout,.scoreboard-form-grid{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  }
+  .setup-fields-grid input,.setup-fields-grid select,.scoreboard-form-grid input,.scoreboard-form-grid select{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+  }
+}

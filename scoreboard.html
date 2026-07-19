@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.2.3.1">
+<link rel="stylesheet" href="css/style.css?v=5.2.5">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -222,7 +222,7 @@ body>nav{display:block}
 @media(max-width:700px){.scoreboard-setup-card .form-grid{grid-template-columns:1fr}.scoreboard-setup-card{padding:18px}}
 
 
-/* ===== v5.2.4 compact duel setup ===== */
+/* ===== v5.2.3 compact duel setup ===== */
 .scoreboard-setup-card{max-width:820px;margin:auto}
 .scoreboard-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .field-half,.field-full{min-width:0}
@@ -280,35 +280,28 @@ body>nav{display:block}
     <input id="targetInput" type="number" min="1" value="20">
   </div>
 
-  <div class="field-full self-side-field">
-    <label>這場比賽我是使用哪一顆球？</label>
-    <select id="selfSideInput" onchange="syncSelfSideFields()">
-      <option value="white" selected>我是白球球員</option>
-      <option value="yellow">我是黃球球員</option>
-    </select>
-  </div>
-
   <div class="field-half player-name-field">
     <label><span class="player-ball-dot white"></span>白球球員</label>
-    <input id="whiteName" list="favoritePlayersList" autocomplete="off">
+    <input id="whiteName" autocomplete="off">
   </div>
 
   <div class="field-half player-name-field">
     <label><span class="player-ball-dot yellow"></span>黃球球員</label>
-    <input id="yellowName" list="favoritePlayersList" autocomplete="off">
+    <input id="yellowName" autocomplete="off">
   </div>
-  <datalist id="favoritePlayersList"></datalist>
-
-  <div class="field-full favorite-player-picker" id="opponentPickerWrap">
+  <div class="field-full favorite-opponent-field">
     <label>從常用球員選擇對手</label>
-    <div id="scoreFavoritePlayerChips" class="multi-favorite-chips"></div>
+    <select id="favoriteOpponentSelect">
+      <option value="">請選擇常用球員</option>
+    </select>
   </div>
 
-  <div class="field-half">
-    <label>先攻球員</label>
-    <select id="starterInput">
-      <option value="white">白球</option>
-      <option value="yellow">黃球</option>
+  <div class="field-full self-side-field">
+    <label>這場比賽我是使用哪一顆球？</label>
+    <select id="selfSideInput">
+      <option value="white" selected>白球球員是我</option>
+      <option value="yellow">黃球球員是我</option>
+      <option value="none">不加入個人紀錄</option>
     </select>
   </div>
 
@@ -428,29 +421,11 @@ function blankPlayer(name,start){
   };
 }
 
-function syncSelfSideFields(){
-  const selfSide=selfSideInput.value;
-  const selfInput=selfSide==='white'?whiteName:yellowName;
-  const opponentInput=selfSide==='white'?yellowName:whiteName;
-  selfInput.value='我';
-  selfInput.readOnly=true;
-  selfInput.removeAttribute('list');
-  opponentInput.readOnly=false;
-  opponentInput.setAttribute('list','favoritePlayersList');
-  if(opponentInput.value==='我')opponentInput.value='';
-}
-
-function chooseOpponent(name){
-  const input=selfSideInput.value==='white'?yellowName:whiteName;
-  input.value=name;
-}
-
 function startGame(){
-  syncSelfSideFields();
   const whitePlayerName=whiteName.value.trim();
   const yellowPlayerName=yellowName.value.trim();
   if(!whitePlayerName||!yellowPlayerName){
-    alert('請輸入或從常用球員選擇對手姓名。');
+    alert('請輸入或選擇白球與黃球球員姓名。');
     return;
   }
   if(whitePlayerName===yellowPlayerName){
@@ -458,7 +433,7 @@ function startGame(){
     return;
   }
   const target=Math.max(1,Number(targetInput.value)||20);
-  const starter=starterInput.value;
+  const starter='white';
   const now=Date.now();
 
   state={
@@ -746,12 +721,9 @@ function finalizeActiveRun(){
 
 
 function populateScoreFavoritePlayers(players){
-  const list=document.getElementById('favoritePlayersList');
-  if(list)list.innerHTML=players.map(name=>`<option value="${escapeScoreText(name)}"></option>`).join('');
-  const chips=document.getElementById('scoreFavoritePlayerChips');
-  if(chips)chips.innerHTML=players.length
-    ?players.map(name=>`<button type="button" class="multi-favorite-chip" onclick="chooseOpponent('${escapeScoreText(name).replace("'","\\'")}')">${escapeScoreText(name)}</button>`).join('')
-    :'<div class="note">尚未設定常用球員，可到「設定」新增。</div>';
+  const select=document.getElementById('favoriteOpponentSelect');
+  if(!select)return;
+  select.innerHTML='<option value="">請選擇常用球員</option>'+players.map(name=>`<option value="${escapeScoreText(name)}">${escapeScoreText(name)}</option>`).join('');
 }
 
 function finishGame(auto=false){
@@ -881,6 +853,31 @@ function newGame(){
   pendingRecord=null;
   undoStack=[];
 }
+
+function syncSelfSideFields(){
+  const side=selfSideInput.value;
+  if(side==='white'){
+    whiteName.value='我'; whiteName.readOnly=true;
+    yellowName.readOnly=false; if(yellowName.value==='我')yellowName.value='';
+  }else if(side==='yellow'){
+    yellowName.value='我'; yellowName.readOnly=true;
+    whiteName.readOnly=false; if(whiteName.value==='我')whiteName.value='';
+  }else{
+    whiteName.readOnly=false; yellowName.readOnly=false;
+    if(whiteName.value==='我')whiteName.value='';
+    if(yellowName.value==='我')yellowName.value='';
+  }
+}
+function applyFavoriteOpponent(){
+  const name=favoriteOpponentSelect.value;
+  if(!name)return;
+  if(selfSideInput.value==='white')yellowName.value=name;
+  else if(selfSideInput.value==='yellow')whiteName.value=name;
+  else if(!whiteName.value)whiteName.value=name;
+  else yellowName.value=name;
+}
+selfSideInput.addEventListener('change',()=>{syncSelfSideFields();favoriteOpponentSelect.value='';});
+favoriteOpponentSelect.addEventListener('change',applyFavoriteOpponent);
 
 (function initializeMatchSetup(){
   try{
