@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2"><link rel="manifest" href="manifest.json"></head><body>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>活動記錄｜3C Studio</title><link rel="stylesheet" href="css/style.css?v=5.2.1"><link rel="manifest" href="manifest.json"></head><body>
 <header><div class="wrap"><h1 id="pageTitle">個人練習</h1><div class="sub" id="pageSubtitle">逐杆記錄並分析自己的練習表現</div></div></header>
 <nav><div class="nav"><a href="index.html">首頁</a><a id="practiceNav" href="game.html?mode=practice">個人練習</a><a href="scoreboard.html">對戰</a><a id="multiNav" href="game.html?mode=multiplayer">多人追分</a><a href="history.html">歷史</a><a href="analytics.html">分析</a><a href="settings.html">設定</a></div></nav>
 <main>
@@ -34,8 +34,7 @@
       <datalist id="favoritePlayersList"></datalist>
       <div id="orders" class="participants"></div>
     </div>
-<button style="margin-top:14px" onclick="startGame()">開始本局並計時</button>
-      <a class="button-link light setup-home-link" href="index.html">← 返回首頁</a>
+<div class="setup-action-row"><button type="button" onclick="startGame()">開始本局並計時</button><a class="button-link" href="index.html">← 返回首頁</a></div>
     </section>
 
 
@@ -157,7 +156,7 @@
     </div>
   </div>
 </div>
-<script src="js/common.js?v=5.2"></script><script>
+<script src="js/common.js?v=5.2.1"></script><script>
 let scores=[],cp=0,started=0,lastShotAt=0,timer=0,reachedAt=0;
 let undoStack=[];
 let inputMode="live";
@@ -801,7 +800,7 @@ function preventScoringZoom(){
 window.addEventListener('DOMContentLoaded',()=>{try{
  const p=JSON.parse(localStorage.getItem('threeCushionPreferences_v1')||'{}');
  targetScore.value=p.defaultTarget||20;
- if(p.defaultVenue)venue.value=p.defaultVenue;
+ const venues=Array.isArray(p.favoriteVenues)?p.favoriteVenues:[];if(p.defaultVenue)venue.value=p.defaultVenue;else if(venues.length)venue.value=venues[0];
  const players=Array.isArray(p.favoritePlayers)?p.favoritePlayers:[];
  const list=document.getElementById('favoritePlayersList');
  if(list)list.innerHTML=players.map(name=>`<option value="${escapeHTML(name)}"></option>`).join('');
