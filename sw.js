@@ -1,7 +1,7 @@
-const CACHE_NAME='3c-studio-v5.3.7';
+const CACHE_NAME='3c-studio-v5.3.8';
 const ASSETS=[
   './','./index.html','./game.html','./scoreboard.html','./history.html',
-  './analytics.html','./settings.html','./css/style.css?v=5.3.7','./js/common.js?v=5.3.7',
+  './analytics.html','./settings.html','./css/style.css?v=5.3.8','./js/common.js?v=5.3.8',
   './manifest.json','./assets/icon-192.png','./assets/icon-512.png'
 ];
 self.addEventListener('install',event=>{

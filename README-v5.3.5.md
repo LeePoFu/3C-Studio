@@ -1,4 +1,4 @@
-# 3C Studio v5.3.5
+# 3C Studio v5.3.8
 
 - 統一 Safari 與 PWA 所有對戰設定欄位高度為 58px。
 - 修正 iOS 日期與時間欄位的垂直置中。

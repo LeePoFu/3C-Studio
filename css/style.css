@@ -708,3 +708,13 @@ input[type="date"],input[type="time"]{
 .self-participant-note{margin-top:7px;color:#0f766e;font-weight:750}
 .participant.self-participant{background:#ecfdf5;border-color:#5eead4}
 .self-participant-badge{display:inline-flex;margin-left:7px;padding:3px 7px;border-radius:999px;background:#0f766e;color:#fff;font-size:.72rem;font-weight:850;vertical-align:middle}
+
+/* ===== v5.3.8 multiplayer click-order selector ===== */
+.multi-favorite-chip{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.multi-favorite-chip .chip-order-badge{display:none;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#fff;color:#0f766e;font-size:.76rem;font-weight:950;line-height:1}
+.multi-favorite-chip.selected .chip-order-badge{display:inline-flex}
+.multi-favorite-chip.self-choice{border-style:dashed}
+.multi-favorite-chip.self-choice small{font-size:.68rem;font-weight:850;opacity:.82}
+.participants .participant{grid-template-columns:42px 1fr;min-height:54px;padding:8px 10px;border:1px solid #dbe4ee;border-radius:12px;background:#fff}
+.participant-order-number{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:#eef2f7;color:#0f172a;font-weight:900}
+.participant.self-participant .participant-order-number{background:#ccfbf1;color:#0f766e}
