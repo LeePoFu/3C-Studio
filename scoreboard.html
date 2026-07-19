@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="css/style.css?v=5.2.5">
+<link rel="stylesheet" href="css/style.css?v=5.2.6">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <title>比賽計分｜3C Studio</title>
 <style>
@@ -280,6 +280,22 @@ body>nav{display:block}
     <input id="targetInput" type="number" min="1" value="20">
   </div>
 
+  <div class="field-full self-side-field">
+    <label>這場比賽我是使用哪一顆球？</label>
+    <select id="selfSideInput">
+      <option value="white" selected>我是白球球員</option>
+      <option value="yellow">我是黃球球員</option>
+      <option value="none">不加入個人紀錄</option>
+    </select>
+  </div>
+
+  <div class="field-full favorite-opponent-field">
+    <label>選擇常用對手（選填）</label>
+    <select id="favoriteOpponentSelect">
+      <option value="">請選擇常用球員</option>
+    </select>
+  </div>
+
   <div class="field-half player-name-field">
     <label><span class="player-ball-dot white"></span>白球球員</label>
     <input id="whiteName" autocomplete="off">
@@ -288,21 +304,6 @@ body>nav{display:block}
   <div class="field-half player-name-field">
     <label><span class="player-ball-dot yellow"></span>黃球球員</label>
     <input id="yellowName" autocomplete="off">
-  </div>
-  <div class="field-full favorite-opponent-field">
-    <label>從常用球員選擇對手</label>
-    <select id="favoriteOpponentSelect">
-      <option value="">請選擇常用球員</option>
-    </select>
-  </div>
-
-  <div class="field-full self-side-field">
-    <label>這場比賽我是使用哪一顆球？</label>
-    <select id="selfSideInput">
-      <option value="white" selected>白球球員是我</option>
-      <option value="yellow">黃球球員是我</option>
-      <option value="none">不加入個人紀錄</option>
-    </select>
   </div>
 
   <div class="field-half">
