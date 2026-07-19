@@ -1,7 +1,7 @@
-const CACHE_NAME='3c-studio-v5.3.4';
+const CACHE_NAME='3c-studio-v5.3.5';
 const ASSETS=[
   './','./index.html','./game.html','./scoreboard.html','./history.html',
-  './analytics.html','./settings.html','./css/style.css?v=5.3.4','./js/common.js?v=5.3.4',
+  './analytics.html','./settings.html','./css/style.css?v=5.3.5','./js/common.js?v=5.3.5',
   './manifest.json','./assets/icon-192.png','./assets/icon-512.png'
 ];
 self.addEventListener('install',event=>{
@@ -14,7 +14,17 @@ self.addEventListener('activate',event=>{
 });
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
-  event.respondWith(fetch(event.request).then(response=>{
+  // HTML navigations must always check the network first so an installed PWA
+  // cannot remain on an older inline-CSS/JS version.
+  if(event.request.mode==='navigate'){
+    event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{
+      const copy=response.clone();
+      caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));
+      return response;
+    }).catch(()=>caches.match(event.request).then(r=>r||caches.match('./scoreboard.html'))));
+    return;
+  }
+  event.respondWith(fetch(event.request,{cache:'no-cache'}).then(response=>{
     const copy=response.clone();
     caches.open(CACHE_NAME).then(cache=>cache.put(event.request,copy));
     return response;
