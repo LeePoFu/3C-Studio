@@ -664,3 +664,23 @@ header{background:linear-gradient(135deg,var(--pro-primary),var(--pro-primary-da
 .multi-favorite-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .multi-favorite-chip{min-height:40px;padding:8px 13px;border-radius:999px;background:#e2e8f0;color:#334155;border:1px solid #cbd5e1;font-weight:800}
 .multi-favorite-chip.selected{background:#0f766e;color:#fff;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.12)}
+
+
+/* ===== v5.2.4 responsive setup containment ===== */
+html,body{max-width:100%;overflow-x:hidden}
+main,.card,.grid,.setup-fields-grid,.scoreboard-form-grid,.field-half,.field-full{min-width:0;max-width:100%}
+input,select,textarea,button,.button-link{max-width:100%;min-width:0}
+.card input,.card select,.card textarea{display:block;width:100%;box-sizing:border-box}
+.setup-fields-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;width:100%}
+.setup-fields-grid>div{min-width:0}
+.setup-fields-grid.multiplayer-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.player-name-field input[readonly]{background:#eef2f7;color:#334155;font-weight:900}
+.self-side-field select{font-weight:900;border-color:#0f766e;background:#ecfdf5}
+.favorite-player-picker{padding-top:2px}
+@media(max-width:430px){
+ main{padding:12px}
+ .card{padding:14px}
+ .setup-fields-grid,.setup-fields-grid.multiplayer-layout,.scoreboard-form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 8px}
+ .setup-fields-grid input,.setup-fields-grid select,.scoreboard-form-grid input,.scoreboard-form-grid select{padding:9px 7px;font-size:.92rem;min-height:48px}
+ .scoreboard-setup-card{padding:14px!important}
+}
